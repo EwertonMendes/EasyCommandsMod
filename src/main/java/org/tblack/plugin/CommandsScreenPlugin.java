@@ -1,10 +1,12 @@
 package org.tblack.plugin;
 
 import com.hypixel.hytale.logger.HytaleLogger;
+import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import javax.annotation.Nonnull;
 import java.util.logging.Level;
+
 
 /**
  * This class serves as the entrypoint for your plugin. Use the setup method to register into game registries or add
@@ -26,6 +28,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
 
         // Registering the command (see Step 4)
         getCommandRegistry().registerCommand((new CommandsScreenCommand()));
+        this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);
     }
 
     @Override
