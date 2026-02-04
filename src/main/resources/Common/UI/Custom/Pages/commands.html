@@ -1,0 +1,26 @@
+<style>
+
+</style>
+
+<div class="page-overlay">
+  <div class="decorated-container" data-hyui-title="AVAILABLE COMMANDS" style="anchor-height: 1009; anchor-width: 800;">
+    <div class="container-contents">
+      <div style="layout-mode: TopScrolling;">
+        <div class="header">
+          <p class="selection-text">Commands available for {{$playerName}}</p>
+        </div>
+        {{#each commands}}
+        <div class="cmd-row" style="anchor-height: 55">
+          <div>
+            <div class="cmd-name" data-hyui-tooltiptext="{{$desc}}" style="layout-mode: Middle; font-size: 80px;">/{{$name}}</div>
+          </div>
+          <div style="layout-mode: Right;">
+            <button id="run-button" data-hyui-tooltiptext="Run /{{$name}} command">Run</button>
+          </div>
+        </div>
+        {{/each}}
+      </div>
+
+    </div>
+  </div>
+</div>

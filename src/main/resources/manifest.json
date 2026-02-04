@@ -1,0 +1,22 @@
+{
+    "Group": "Example",
+    "Name": "EasyCommandsPlugin",
+    "Version": "0.0.2",
+    "Description": "Plugin created for helping on finding and running available commands inside Hytale.",
+    "Authors": [
+        {
+            "Name": "Ewerton M. Mendes"
+        }
+    ],
+    "Website": "tblack.org",
+    "ServerVersion": "*",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "org.tblack.plugin.CommandsScreenPlugin",
+    "IncludesAssetPack": true
+}
