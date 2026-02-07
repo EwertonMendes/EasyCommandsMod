@@ -1,22 +1,24 @@
 package org.tblack.plugin;
 
+import au.ellie.hyui.builders.HyUIPage;
 import au.ellie.hyui.builders.PageBuilder;
 import au.ellie.hyui.html.TemplateProcessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
 import com.hypixel.hytale.protocol.packets.interface_.CustomPageLifetime;
+import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class CommandsScreenCommand extends AbstractPlayerCommand {
 
@@ -43,10 +45,20 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                 .setVariable("playerName", playerRef.getUsername())
                 .setVariable("commands", commandsList);
 
-        PageBuilder.pageForPlayer(playerRef)
+        PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef);
+
+        pageBuilder
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
-                .loadHtml("Pages/commands.html", template)
-                .open(store);
+                .loadHtml("Pages/commands.html", template);
+
+        commands.forEach((test, a) -> {
+            pageBuilder.addEventListener(test.toString(), CustomUIEventBindingType.Activating, (data, ctx) -> {
+                CommandManager.get().handleCommand(playerRef, test.toString());
+                ctx.getPage().ifPresent(HyUIPage::close);
+            });
+        });
+
+        pageBuilder.open(store);
     }
 
 
