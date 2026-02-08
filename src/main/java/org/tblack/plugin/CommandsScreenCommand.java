@@ -16,7 +16,6 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
-import java.awt.*;
 import java.util.*;
 import java.util.List;
 
@@ -55,10 +54,9 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
             pageBuilder.addEventListener(test.toString(), CustomUIEventBindingType.Activating, (data, ctx) -> {
                 CommandManager.get().handleCommand(playerRef, test.toString());
                 ctx.getPage().ifPresent(HyUIPage::close);
+
             });
         });
-
-        pageBuilder.open(store);
     }
 
 
