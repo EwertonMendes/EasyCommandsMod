@@ -1,22 +1,28 @@
 <div class="page-overlay">
-  <div class="decorated-container" data-hyui-title="AVAILABLE COMMANDS" style="anchor-height: 1009; anchor-width: 800;">
+  <div class="decorated-container" data-hyui-title="My Commands" style="anchor-height: 800; anchor-width: 800;">
     <div class="container-contents">
       <div style="layout-mode: TopScrolling;">
         <div class="header">
-          <p class="selection-text">Commands available for {{$playerName}}</p>
+          <p class="selection-text">Registered Commands for {{$playerName}}</p>
         </div>
-        {{#each commands}}
-        <div class="cmd-row" style="anchor-height: 55">
-          <div>
-            <div class="cmd-name" data-hyui-tooltiptext="{{$desc}}" style="layout-mode: Middle; font-size: 80px;">/{{$name}}</div>
-          </div>
-          <div style="layout-mode: Right;">
-            <button id="{{$name}}" data-hyui-tooltiptext="Run /{{$name}} command">Run</button>
-          </div>
-        </div>
-        {{/each}}
-      </div>
+        <div style="anchor-height: 30;"></div>
 
+        {{#each slots}}
+        <div class="row" style="layout-mode: Left;">
+          <div style="layout-mode: Middle;">
+            <p style="anchor-width: 60; layout-mode: Middle;">Slot {{$value}}</p>
+          </div>
+          <div style="anchor-width: 10;"></div>
+          <input type="text" id="slot-{{$value}}-input" data-hyui-flexweight="1" />
+          <div style="anchor-width: 10;"></div>
+          <button id="slot-{{$value}}-button" style="anchor-width: 150;" class="secondary-button">Save</button>
+        </div>
+
+        <div style="anchor-height: 30;"></div>
+        {{/each}}
+
+        <hotkey-label input-binding-key="Jump" input-binding-key-prefix="Press "></hotkey-label>
+      </div>
     </div>
   </div>
 </div>

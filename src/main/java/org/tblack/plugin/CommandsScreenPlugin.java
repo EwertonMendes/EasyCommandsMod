@@ -39,8 +39,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
 
         ShortcutConfig.load();
 
-        ComponentType<EntityStore, MovementStatesComponent> movementType =
-                this.getEntityStoreRegistry().registerComponent(MovementStatesComponent.class, MovementStatesComponent::new);
+        this.getEntityStoreRegistry().registerComponent(MovementStatesComponent.class, MovementStatesComponent::new);
         this.getEntityStoreRegistry().registerSystem(new PlayerMovementStateSystem());
     }
 
