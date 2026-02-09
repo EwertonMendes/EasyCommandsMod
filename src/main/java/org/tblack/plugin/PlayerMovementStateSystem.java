@@ -14,6 +14,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
 
 import javax.annotation.Nonnull;
+import java.awt.*;
 import java.util.UUID;
 
 public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> {
@@ -76,7 +77,9 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
 
             if (cmd != null && !cmd.isEmpty()) {
 
-                commandBuffer.run((storeApi) ->
+                player.sendMessage(Message.raw("Running Command /" + cmd).color(Color.GREEN));
+
+                commandBuffer.run((_) ->
                         CommandManager.get().handleCommand(player, cmd)
                 );
             } else {
