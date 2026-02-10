@@ -1,13 +1,11 @@
 package org.tblack.plugin;
 
-import com.hypixel.hytale.component.ComponentType;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.io.adapter.PacketAdapters;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 import java.util.logging.Level;
@@ -29,7 +27,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
 
     @Override
     protected void start() {
-        getLogger().at(Level.INFO).log("MyFirstPlugin has started successfully!");
+        getLogger().at(Level.INFO).log("EasyCommands has started successfully!");
 
         getCommandRegistry().registerCommand((new CommandsScreenCommand()));
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);

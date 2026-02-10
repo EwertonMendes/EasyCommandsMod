@@ -42,10 +42,6 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         UUID uuid = player.getUuid();
 
-        Map<String, String> commands = CommandUtils.getAllCommandsWithDescriptions();
-
-        List<Map<String, Object>> commandsList = buildCommandsModel(commands);
-
         record Slot(int value){}
 
         List<Slot> slots = List.of(
@@ -73,7 +69,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         slots.forEach(slot -> {
             pageBuilder.getById("slot-" + slot.value + "-input", TextFieldBuilder.class).ifPresent(tx -> {
                 tx.withValue(ShortcutConfig.getCommand(uuid.toString(), slot.value));
-            });;
+            });
 
             pageBuilder.addEventListener("slot-" + slot.value + "-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
                 playerRef.sendMessage(Message.raw("Saving command on slot " + slot.value));
@@ -84,6 +80,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
                 try {
                     ShortcutConfig.setCommand(uuid.toString(), slot.value, newCommandValue);
+                    HUDEvent.refreshPlayerCommandsHud(playerRef, store);
                     playerRef.sendMessage(Message.raw("Command " + newCommandValue + " saved on slot " + slot.value + " successfully!").color(Color.GREEN));
                 } catch (Exception e) {
                     playerRef.sendMessage(Message.raw("Error saving command " + newCommandValue + " on slot " + slot.value).color(Color.RED));
@@ -92,17 +89,5 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         });
 
         pageBuilder.open(store);
-    }
-
-
-    public static List<Map<String,Object>> buildCommandsModel(Map<String,String> commands) {
-        List<Map<String,Object>> list = new ArrayList<>();
-        for (Map.Entry<String,String> e : commands.entrySet()) {
-            Map<String,Object> model = new HashMap<>();
-            model.put("name", e.getKey());
-            model.put("desc", e.getValue());
-            list.add(model);
-        }
-        return list;
     }
 }

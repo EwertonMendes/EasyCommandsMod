@@ -1,9 +1,9 @@
-<div class="container" data-hyui-title="My Quick Commands" style="anchor-width: 250; anchor-height: 300; anchor-right: 10; anchor-top: 20;">
+<div class="container" data-hyui-title="My Quick Commands" style="anchor-width: 250; anchor-height: 270; anchor-left: 10; anchor-top: 20;">
     <div style="layout-mode: left;">
         <div style="anchor-left: 1; layout-mode: top;">
-            <p>[ALT + 1] -> /tpa Nuvenzinha</p>
-            <p>[ALT + 2] -> /tpa Test</p>
-            <p>[ALT + 3] -> /hf home</p>
-            <p>[ALT + 4] -> /home</p>
+            {{#each playerCommands}}
+            <p id="{{$slot}}">Slot {{$slot}} -> /{{$command}}</p>
+            {{/each}}
         </div>
+    </div>
 </div>

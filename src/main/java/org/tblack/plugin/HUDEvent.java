@@ -1,11 +1,16 @@
 package org.tblack.plugin;
 
 import au.ellie.hyui.builders.HudBuilder;
+import au.ellie.hyui.html.TemplateProcessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HUDEvent {
 
@@ -16,9 +21,54 @@ public class HUDEvent {
 
         PlayerRef player = store.getComponent(playerRef, PlayerRef.getComponentType());
 
-        HudBuilder.hudForPlayer(player)
-                .loadHtml("Huds/quick-command-hud.html")
-                .show(store);
+        TemplateProcessor template = new TemplateProcessor()
+                .setVariable("playerCommands", getCommandsList(player));
+
+        HudBuilder hudBuilder = HudBuilder.hudForPlayer(player)
+                .loadHtml("Huds/quick-command-hud.html", template);
+
+        var hud = hudBuilder.show(store);
+
+        HudStore.setHud(hud);
+    }
+
+    private static List<Map<String, Object>> getCommandsList(PlayerRef player) {
+        Map<Integer, String> playerCommands = ShortcutConfig.getForPlayer(player.getUuid().toString());
+
+        return playerCommands.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("slot", entry.getKey());
+                    m.put("command", entry.getValue());
+                    return m;
+                })
+                .toList();
+    }
+
+
+    public static void refreshPlayerCommandsHud(PlayerRef playerRef, Store<EntityStore> store ) {
+        System.out.println("entrou no metodo");
+
+        var currentHud = HudStore.getHud();
+
+        if (currentHud == null) return;
+
+        System.out.println("rodou porra");
+
+        currentHud.remove();
+
+        List<Map<String, Object>> commandsList = getCommandsList(playerRef);
+
+        TemplateProcessor template = new TemplateProcessor()
+                .setVariable("playerCommands", commandsList);
+
+        HudBuilder updatedHud = HudBuilder.hudForPlayer(playerRef)
+                .loadHtml("Huds/quick-command-hud.html", template);
+
+        var hud = updatedHud.show(store);
+
+        HudStore.setHud(hud);
     }
 
 }
