@@ -39,19 +39,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         UUID uuid = context.sender().getUuid();
 
-        record Slot(int value){}
-
-        List<Slot> slots = List.of(
-                new Slot(1),
-                new Slot(2),
-                new Slot(3),
-                new Slot(4),
-                new Slot(5),
-                new Slot(6),
-                new Slot(7),
-                new Slot(8),
-                new Slot(9)
-        );
+        List<Integer> slots = List.of(1,2,3,4,5,6,7,8,9);
 
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerName", playerRef.getUsername())
@@ -64,23 +52,23 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                 .loadHtml("Pages/commands.html", template);
 
         slots.forEach(slot -> {
-            pageBuilder.getById("slot-" + slot.value + "-input", TextFieldBuilder.class).ifPresent(tx -> {
-                tx.withValue(ShortcutConfig.getCommand(uuid.toString(), slot.value));
+            pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(tx -> {
+                tx.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
             });
 
-            pageBuilder.addEventListener("slot-" + slot.value + "-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
-                playerRef.sendMessage(Message.raw("Saving command on slot " + slot.value));
+            pageBuilder.addEventListener("slot-" + slot + "-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
+                playerRef.sendMessage(Message.raw("Saving command on slot " + slot));
                 String newCommandValue = ctx
-                        .getValue("slot-" + slot.value + "-input")
+                        .getValue("slot-" + slot + "-input")
                         .map(Object::toString)
                         .orElse("");
 
                 try {
-                    ShortcutConfig.setCommand(uuid.toString(), slot.value, newCommandValue);
+                    ShortcutConfig.setCommand(uuid.toString(), slot, newCommandValue);
                     HUDEvent.refreshPlayerCommandsHud(playerRef, store);
-                    playerRef.sendMessage(Message.raw("Command " + newCommandValue + " saved on slot " + slot.value + " successfully!").color(Color.GREEN));
+                    playerRef.sendMessage(Message.raw("Command " + newCommandValue + " saved on slot " + slot + " successfully!").color(Color.GREEN));
                 } catch (Exception e) {
-                    playerRef.sendMessage(Message.raw("Error saving command " + newCommandValue + " on slot " + slot.value).color(Color.RED));
+                    playerRef.sendMessage(Message.raw("Error saving command " + newCommandValue + " on slot " + slot).color(Color.RED));
                 }
             });
         });

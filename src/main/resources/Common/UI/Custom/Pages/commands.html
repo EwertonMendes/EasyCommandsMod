@@ -10,18 +10,16 @@
         {{#each slots}}
         <div class="row" style="layout-mode: Left;">
           <div style="layout-mode: Middle;">
-            <p style="anchor-width: 60; layout-mode: Middle;">Slot {{$value}}</p>
+            <p style="anchor-width: 60; layout-mode: Middle;">Slot {{$item}}</p>
           </div>
           <div style="anchor-width: 10;"></div>
-          <input type="text" id="slot-{{$value}}-input" data-hyui-flexweight="1" />
+          <input type="text" id="slot-{{$item}}-input" data-hyui-flexweight="1" />
           <div style="anchor-width: 10;"></div>
-          <button id="slot-{{$value}}-button" style="anchor-width: 150;" class="secondary-button">Save</button>
+          <button id="slot-{{$item}}-button" style="anchor-width: 150;" class="secondary-button">Save</button>
         </div>
 
         <div style="anchor-height: 30;"></div>
         {{/each}}
-
-        <hotkey-label input-binding-key="Jump" input-binding-key-prefix="Press "></hotkey-label>
       </div>
     </div>
   </div>
