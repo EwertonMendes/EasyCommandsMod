@@ -21,6 +21,7 @@ public class PacketListener implements PacketWatcher {
 
         for (SyncInteractionChain item : updates) {
             PlayerAuthentication playerAuthentication = packetHandler.getAuth();
+            assert playerAuthentication != null;
             UUID uuid = playerAuthentication.getUuid();
 
             InteractionType interactionType = item.interactionType;

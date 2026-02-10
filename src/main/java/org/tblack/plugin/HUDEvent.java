@@ -21,6 +21,7 @@ public class HUDEvent {
 
         PlayerRef player = store.getComponent(playerRef, PlayerRef.getComponentType());
 
+        assert player != null;
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerCommands", getCommandsList(player));
 
@@ -48,13 +49,9 @@ public class HUDEvent {
 
 
     public static void refreshPlayerCommandsHud(PlayerRef playerRef, Store<EntityStore> store ) {
-        System.out.println("entrou no metodo");
-
         var currentHud = HudStore.getHud();
 
         if (currentHud == null) return;
-
-        System.out.println("rodou porra");
 
         currentHud.remove();
 

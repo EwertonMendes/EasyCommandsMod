@@ -7,6 +7,7 @@ import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.protocol.MovementStates;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.server.core.inventory.Inventory;
@@ -47,8 +48,10 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
         var playerRef = chunk.getReferenceTo(index);
 
         Player player = store.getComponent(playerRef, Player.getComponentType());
+        UUIDComponent UuidComponent = store.getComponent(playerRef, UUIDComponent.getComponentType());
 
-        UUID uuid = player.getUuid();
+        assert UuidComponent != null;
+        UUID uuid = UuidComponent.getUuid();
 
         if (!states.crouching || !states.idle || !states.horizontalIdle) {
             InteractionTracker.triggeredShortcut.remove(uuid);

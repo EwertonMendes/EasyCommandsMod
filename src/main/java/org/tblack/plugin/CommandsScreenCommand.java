@@ -11,7 +11,6 @@ import com.hypixel.hytale.protocol.packets.interface_.CustomUIEventBindingType;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
-import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -38,9 +37,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
             @NonNullDecl World world
     ) {
 
-        Player player = store.getComponent(ref, Player.getComponentType());
-
-        UUID uuid = player.getUuid();
+        UUID uuid = context.sender().getUuid();
 
         record Slot(int value){}
 
