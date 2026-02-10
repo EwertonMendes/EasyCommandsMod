@@ -57,18 +57,24 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
             });
 
             pageBuilder.addEventListener("slot-" + slot + "-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
-                playerRef.sendMessage(Message.raw("Saving command on slot " + slot));
+
                 String newCommandValue = ctx
                         .getValue("slot-" + slot + "-input")
                         .map(Object::toString)
                         .orElse("");
-
                 try {
+                    if (newCommandValue.isEmpty()) {
+                        ShortcutConfig.removeCommand(uuid.toString(), slot);
+                        playerRef.sendMessage(Message.raw("Command " + newCommandValue + " removed from " + slot).color(Color.orange));
+                        return;
+                    }
+                    playerRef.sendMessage(Message.raw("Saving command on slot " + slot));
                     ShortcutConfig.setCommand(uuid.toString(), slot, newCommandValue);
-                    HUDEvent.refreshPlayerCommandsHud(playerRef, store);
                     playerRef.sendMessage(Message.raw("Command " + newCommandValue + " saved on slot " + slot + " successfully!").color(Color.GREEN));
                 } catch (Exception e) {
                     playerRef.sendMessage(Message.raw("Error saving command " + newCommandValue + " on slot " + slot).color(Color.RED));
+                }finally {
+                    HUDEvent.refreshPlayerCommandsHud(playerRef, store);
                 }
             });
         });
