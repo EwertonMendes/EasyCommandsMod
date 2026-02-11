@@ -15,12 +15,21 @@
           <div style="anchor-width: 10;"></div>
           <input type="text" id="slot-{{$item}}-input" data-hyui-flexweight="1" />
           <div style="anchor-width: 10;"></div>
-          <button id="slot-{{$item}}-button" style="anchor-width: 150;" class="secondary-button">Save</button>
+          <button id="slot-{{$item}}-button-clear" style="anchor-width: 50;" class="secondary-button">X</button>
         </div>
 
         <div style="anchor-height: 30;"></div>
         {{/each}}
+        <div style="layout-mode: Middle;">
+          <div data-hyui-flexweight="1"></div>
+          <button id="save-all-button"
+                  style="anchor-width: 200; anchor-height: 40"
+                  class="primary-button">
+            SAVE ALL
+          </button>
+        </div>
       </div>
+
     </div>
   </div>
 </div>

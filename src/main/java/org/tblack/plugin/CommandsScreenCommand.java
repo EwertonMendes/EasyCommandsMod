@@ -27,7 +27,6 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         this.setPermissionGroup(GameMode.Adventure);
     }
 
-
     @Override
     protected void execute(
             @NonNullDecl CommandContext context,
@@ -51,34 +50,65 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
                 .loadHtml("Pages/commands.html", template);
 
-        slots.forEach(slot -> {
-            pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(tx -> {
-                tx.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
-            });
-
-            pageBuilder.addEventListener("slot-" + slot + "-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
-
-                String newCommandValue = ctx
-                        .getValue("slot-" + slot + "-input")
-                        .map(Object::toString)
-                        .orElse("");
-                try {
-                    if (newCommandValue.isEmpty()) {
-                        ShortcutConfig.removeCommand(uuid.toString(), slot);
-                        playerRef.sendMessage(Message.raw("Command " + newCommandValue + " removed from " + slot).color(Color.orange));
-                        return;
-                    }
-                    playerRef.sendMessage(Message.raw("Saving command on slot " + slot));
-                    ShortcutConfig.setCommand(uuid.toString(), slot, newCommandValue);
-                    playerRef.sendMessage(Message.raw("Command " + newCommandValue + " saved on slot " + slot + " successfully!").color(Color.GREEN));
-                } catch (Exception e) {
-                    playerRef.sendMessage(Message.raw("Error saving command " + newCommandValue + " on slot " + slot).color(Color.RED));
-                }finally {
-                    HUDEvent.refreshPlayerCommandsHud(playerRef, store);
-                }
-            });
-        });
+        this.setSaveButtonEventListener(uuid, pageBuilder, playerRef, store, slots);
+        this.setClearButtonsEventListener(uuid, pageBuilder, playerRef, store, slots);
 
         pageBuilder.open(store);
+    }
+
+    private void setClearButtonsEventListener(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
+        slots.forEach(slot -> {
+           pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(lb -> {
+                lb.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
+            });
+
+            pageBuilder.addEventListener("slot-" + slot + "-button-clear", CustomUIEventBindingType.Activating, (_, ctx) -> {
+                Map<Integer, String> currentValues = new HashMap<>();
+                slots.forEach(slotIndex -> {
+                    String v = ctx.getValue("slot-" + slotIndex + "-input").map(Object::toString).orElse("");
+                    currentValues.put(slotIndex, v);
+                });
+
+                ShortcutConfig.removeCommand(uuid.toString(), slot);
+
+                currentValues.put(slot, "");
+
+                currentValues.forEach((slotIndex, value) -> {
+                    ctx.getById("slot-" + slotIndex + "-input", TextFieldBuilder.class).ifPresent(tf -> tf.withValue(value));
+                });
+
+                ctx.updatePage(true);
+
+                HUDEvent.refreshPlayerCommandsHud(playerRef, store);
+
+                playerRef.sendMessage(
+                        Message.raw("Removed command from slot " + slot + " successfully!").color(Color.orange)
+                );
+            });
+        });
+    }
+
+    private void setSaveButtonEventListener(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
+        pageBuilder.addEventListener("save-all-button",  CustomUIEventBindingType.Activating, (_, ctx) -> {
+            try {
+                slots.forEach(slot -> {
+                    String newCommandValue = ctx
+                            .getValue("slot-" + slot + "-input")
+                            .map(Object::toString)
+                            .orElse("");
+
+                    if (newCommandValue.isEmpty()) {
+                        ShortcutConfig.removeCommand(uuid.toString(), slot);
+                        return;
+                    }
+                    ShortcutConfig.setCommand(uuid.toString(), slot, newCommandValue);
+                });
+            } catch (Exception e){
+                playerRef.sendMessage(Message.raw("Error saving commands, try again later!").color(Color.RED));
+            }finally {
+                HUDEvent.refreshPlayerCommandsHud(playerRef, store);
+                playerRef.sendMessage(Message.raw("Commands saved successfully!").color(Color.GREEN));
+            }
+        });
     }
 }
