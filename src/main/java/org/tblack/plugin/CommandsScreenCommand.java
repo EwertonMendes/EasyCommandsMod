@@ -2,6 +2,7 @@ package org.tblack.plugin;
 
 import au.ellie.hyui.builders.PageBuilder;
 import au.ellie.hyui.builders.TextFieldBuilder;
+import au.ellie.hyui.events.UIContext;
 import au.ellie.hyui.html.TemplateProcessor;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -22,7 +23,7 @@ import java.util.List;
 
 public class CommandsScreenCommand extends AbstractPlayerCommand {
 
-    Map<Integer, String> currentValues = new HashMap<>();
+    private static final List<Integer> SLOTS = List.of(1,2,3,4,5,6,7,8,9);
 
     public CommandsScreenCommand() {
         super("cmd", "Shows a screen with all available commands for the current player.");
@@ -40,102 +41,179 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         UUID uuid = context.sender().getUuid();
 
-        List<Integer> slots = List.of(1,2,3,4,5,6,7,8,9);
-
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerName", playerRef.getUsername())
-                .setVariable("slots", slots);
+                .setVariable("slots", SLOTS);
 
-        PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef);
-
-        pageBuilder
+        PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef)
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
                 .loadHtml("Pages/commands.html", template);
 
-        this.setSaveButtonEventListener(uuid, pageBuilder, playerRef, store, slots);
-        this.setClearButtonsAndTextFieldsEventListeners(uuid, pageBuilder, playerRef, store, slots);
+        loadInitialValues(uuid, pageBuilder);
+        registerInputListeners(uuid, pageBuilder);
+        registerClearListeners(uuid, pageBuilder, playerRef, store);
+        registerSaveListener(uuid, pageBuilder, playerRef, store);
 
         pageBuilder.open(store);
     }
 
-    private void setClearButtonsAndTextFieldsEventListeners(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
-        slots.forEach(slot -> {
-           pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(lb -> {
-                lb.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
-            });
+    /* =========================================================
+       LISTENER REGISTRATION
+       ========================================================= */
 
-            pageBuilder.addEventListener("slot-" + slot + "-input", CustomUIEventBindingType.ValueChanged, (event, ctx) -> {
-                String newValue = ctx.getValue("slot-" + slot + "-input").map(Object::toString).orElse("");
-                if (newValue.startsWith("/")) {
-                    newValue = newValue.substring(1);
-                }
+    private void registerInputListeners(UUID uuid, PageBuilder pageBuilder) {
+        for (Integer slot : SLOTS) {
+            pageBuilder.addEventListener(
+                    getInputId(slot),
+                    CustomUIEventBindingType.ValueChanged,
+                    (event, ctx) -> {
+                        String value = ctx.getValue(getInputId(slot))
+                                .map(Object::toString)
+                                .orElse("");
 
-                if (newValue.startsWith("/")) {;
-                    newValue = "";
-                }
-                this.currentValues.put(slot, newValue);
-            });
+                        String normalized = normalizeCommand(value);
 
-            pageBuilder.addEventListener("slot-" + slot + "-button-clear", CustomUIEventBindingType.Activating, (_, ctx) -> {
-
-                slots.forEach(slotIndex -> {
-                    String v = ctx.getValue("slot-" + slotIndex + "-input").map(Object::toString).orElse("");
-                    this.currentValues.put(slotIndex, v);
-                });
-
-                ShortcutConfig.removeCommand(uuid.toString(), slot);
-
-                this.currentValues.put(slot, "");
-
-                this.currentValues.forEach((slotIndex, value) -> {
-                    ctx.getById("slot-" + slotIndex + "-input", TextFieldBuilder.class).ifPresent(tf -> tf.withValue(value));
-                });
-
-                ctx.updatePage(true);
-
-                HUDEvent.refreshPlayerCommandsHud(playerRef, store);
-
-                playerRef.sendMessage(
-                        Message.raw("Removed command from slot " + slot + " successfully!").color(Color.orange)
-                );
-            });
-        });
+                        ctx.getById(getInputId(slot), TextFieldBuilder.class)
+                                .ifPresent(tf -> tf.withValue(normalized));
+                    }
+            );
+        }
     }
 
-    private void setSaveButtonEventListener(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
-        pageBuilder.addEventListener("save-all-button",  CustomUIEventBindingType.Activating, (_, ctx) -> {
-            try {
-                slots.forEach(slot -> {
-                    String newCommandValue = ctx
-                            .getValue("slot-" + slot + "-input")
-                            .map(Object::toString)
-                            .orElse("");
+    private void registerClearListeners(UUID uuid,
+                                        PageBuilder pageBuilder,
+                                        PlayerRef playerRef,
+                                        Store<EntityStore> store) {
 
-                    newCommandValue = newCommandValue.trim();
+        for (Integer slot : SLOTS) {
+            pageBuilder.addEventListener(
+                    getClearButtonId(slot),
+                    CustomUIEventBindingType.Activating,
+                    (_, ctx) -> {
 
-                    if (newCommandValue.startsWith("/")) {
-                        newCommandValue = newCommandValue.substring(1);
-                    }
-
-                    this.currentValues.forEach((slotIndex, value) -> {
-                        System.out.println(slotIndex + " " + value);
-                        ctx.getById("slot-" + slotIndex + "-input", TextFieldBuilder.class).ifPresent(tf -> tf.withValue(value));
-                    });
-
-                    ctx.updatePage(true);
-
-                    if (newCommandValue.isEmpty() || newCommandValue.startsWith("/")) {
                         ShortcutConfig.removeCommand(uuid.toString(), slot);
-                        return;
+
+                        ctx.getById(getInputId(slot), TextFieldBuilder.class)
+                                .ifPresent(tf -> tf.withValue(""));
+
+                        ctx.updatePage(true);
+
+                        refreshHud(playerRef, store);
+
+                        playerRef.sendMessage(
+                                Message.raw("Removed command from slot " + slot + " successfully!")
+                                        .color(Color.ORANGE)
+                        );
                     }
-                    ShortcutConfig.setCommand(uuid.toString(), slot, newCommandValue);
-                });
-            } catch (Exception e){
-                playerRef.sendMessage(Message.raw("Error saving commands, try again later!").color(Color.RED));
-            }finally {
-                HUDEvent.refreshPlayerCommandsHud(playerRef, store);
-                playerRef.sendMessage(Message.raw("Commands saved successfully!").color(Color.GREEN));
+            );
+        }
+    }
+
+    private void registerSaveListener(UUID uuid,
+                                      PageBuilder pageBuilder,
+                                      PlayerRef playerRef,
+                                      Store<EntityStore> store) {
+
+        pageBuilder.addEventListener(
+                "save-all-button",
+                CustomUIEventBindingType.Activating,
+                (_, ctx) -> {
+
+                    try {
+                        Map<Integer, String> commands = collectAllInputValues(ctx);
+
+                        persistCommands(uuid, commands);
+
+                        ctx.updatePage(true);
+
+                        playerRef.sendMessage(
+                                Message.raw("Commands saved successfully!")
+                                        .color(Color.GREEN)
+                        );
+
+                    } catch (Exception e) {
+
+                        playerRef.sendMessage(
+                                Message.raw("Error saving commands, try again later!")
+                                        .color(Color.RED)
+                        );
+                    } finally {
+                        refreshHud(playerRef, store);
+                    }
+                }
+        );
+    }
+
+    /* =========================================================
+       CORE LOGIC
+       ========================================================= */
+
+    private Map<Integer, String> collectAllInputValues(Object ctx) {
+        Map<Integer, String> values = new HashMap<>();
+
+        for (Integer slot : SLOTS) {
+            String raw = ((UIContext) ctx)
+                    .getValue(getInputId(slot))
+                    .map(Object::toString)
+                    .orElse("");
+
+            values.put(slot, normalizeCommand(raw));
+        }
+
+        return values;
+    }
+
+    private void persistCommands(UUID uuid, Map<Integer, String> commands) {
+        for (Map.Entry<Integer, String> entry : commands.entrySet()) {
+
+            Integer slot = entry.getKey();
+            String command = entry.getValue();
+
+            if (command.isEmpty()) {
+                ShortcutConfig.removeCommand(uuid.toString(), slot);
+                continue;
             }
-        });
+
+            ShortcutConfig.setCommand(uuid.toString(), slot, command);
+        }
+    }
+
+    private void loadInitialValues(UUID uuid, PageBuilder pageBuilder) {
+        for (Integer slot : SLOTS) {
+            pageBuilder.getById(getInputId(slot), TextFieldBuilder.class)
+                    .ifPresent(tf ->
+                            tf.withValue(
+                                    ShortcutConfig.getCommand(uuid.toString(), slot)
+                            )
+                    );
+        }
+    }
+
+    /* =========================================================
+       UTIL
+       ========================================================= */
+
+    private String normalizeCommand(String input) {
+        if (input == null) return "";
+
+        String value = input.trim();
+
+        if (value.startsWith("/")) {
+            value = value.substring(1);
+        }
+
+        return value.trim();
+    }
+
+    private void refreshHud(PlayerRef playerRef, Store<EntityStore> store) {
+        HUDEvent.refreshPlayerCommandsHud(playerRef, store);
+    }
+
+    private String getInputId(int slot) {
+        return "slot-" + slot + "-input";
+    }
+
+    private String getClearButtonId(int slot) {
+        return "slot-" + slot + "-button-clear";
     }
 }
