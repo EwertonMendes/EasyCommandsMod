@@ -31,6 +31,7 @@ public class HUDEvent {
         var hud = hudBuilder.show(store);
 
         HudStore.setHud(hud);
+        HudStore.setIsVisible(true);
     }
 
     private static List<Map<String, Object>> getCommandsList(PlayerRef player) {

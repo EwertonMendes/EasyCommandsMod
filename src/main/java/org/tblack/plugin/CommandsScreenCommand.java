@@ -1,5 +1,6 @@
 package org.tblack.plugin;
 
+import au.ellie.hyui.builders.CheckBoxBuilder;
 import au.ellie.hyui.builders.PageBuilder;
 import au.ellie.hyui.builders.TextFieldBuilder;
 import au.ellie.hyui.events.UIContext;
@@ -53,6 +54,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerInputListeners(uuid, pageBuilder);
         registerClearListeners(uuid, pageBuilder, playerRef, store);
         registerSaveListener(uuid, pageBuilder, playerRef, store);
+        registerShowHudCheckboxListener(pageBuilder);
 
         pageBuilder.open(store);
     }
@@ -142,6 +144,27 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                     }
                 }
         );
+    }
+
+    private void registerShowHudCheckboxListener(PageBuilder pageBuilder) {
+        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent((cb) -> {
+            cb.withValue(HudStore.getIsVisible());
+        });
+        pageBuilder.addEventListener("show-hud-checkbox", CustomUIEventBindingType.ValueChanged,
+                (_, ctx) -> {
+                    boolean checkBoxValue =  ctx.getValue("show-hud-checkbox").map(Boolean.class::cast)
+                            .orElse(false);
+
+                    var hud = HudStore.getHud();
+
+                    if(!checkBoxValue) {
+                        hud.hide();
+                        HudStore.setIsVisible(false);
+                    } else {
+                        hud.unhide();
+                        HudStore.setIsVisible(true);
+                    }
+                });
     }
 
     /* =========================================================
