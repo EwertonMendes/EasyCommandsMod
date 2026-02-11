@@ -1,6 +1,7 @@
 <div class="page-overlay">
   <div class="decorated-container" data-hyui-title="My Commands" style="anchor-height: 850; anchor-width: 800;">
     <div class="container-contents">
+      <input type="hidden" id="currentTab" value="slots" />
       <nav id="easy-commands-tabs" class="tabs"
            data-tabs="slots:Slots:slots-content,config:Config:config-content"
            data-selected="slots">
@@ -38,7 +39,35 @@
         </div>
       </div>
       <div id="config-content" class="tab-content" data-hyui-tab-id="config">
-        <p>Config</p>
+        <div style="layout-mode: TopScrolling;">
+          <div style="anchor-height: 20;"></div>
+          <div class="row" style="layout-mode: Left;">
+            <div style="layout-mode: Middle;">
+              <p style="layout-mode: Middle;">Hide Commands Hud</p>
+            </div>
+            <div style="anchor-width: 10;"></div>
+            <input type="checkbox" id="hide-hud" checked data-hyui-flexweight="1"/>
+            <div style="anchor-width: 10;"></div>
+          </div>
+          <div style="anchor-height: 20;"></div>
+          <div class="row" style="layout-mode: Left;">
+            <div style="layout-mode: Middle;">
+              <p style="layout-mode: Middle;">Commands Hud Position</p>
+            </div>
+            <div style="anchor-width: 10;"></div>
+            <p style="layout-mode: Middle;">Soon</p>
+            <div style="anchor-width: 10;"></div>
+          </div>
+          <div style="anchor-height: 20;"></div>
+          <div class="row" style="layout-mode: Left;">
+            <div style="layout-mode: Middle;">
+              <p style="layout-mode: Middle;">Language</p>
+            </div>
+            <div style="anchor-width: 10;"></div>
+            <p style="layout-mode: Middle;">Soon</p>
+            <div style="anchor-width: 10;"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

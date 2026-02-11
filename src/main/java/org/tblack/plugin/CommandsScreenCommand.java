@@ -22,6 +22,8 @@ import java.util.List;
 
 public class CommandsScreenCommand extends AbstractPlayerCommand {
 
+    Map<Integer, String> currentValues = new HashMap<>();
+
     public CommandsScreenCommand() {
         super("cmd", "Shows a screen with all available commands for the current player.");
         this.setPermissionGroup(GameMode.Adventure);
@@ -51,30 +53,41 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                 .loadHtml("Pages/commands.html", template);
 
         this.setSaveButtonEventListener(uuid, pageBuilder, playerRef, store, slots);
-        this.setClearButtonsEventListener(uuid, pageBuilder, playerRef, store, slots);
+        this.setClearButtonsAndTextFieldsEventListeners(uuid, pageBuilder, playerRef, store, slots);
 
         pageBuilder.open(store);
     }
 
-    private void setClearButtonsEventListener(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
-        Map<Integer, String> currentValues = new HashMap<>();
+    private void setClearButtonsAndTextFieldsEventListeners(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
         slots.forEach(slot -> {
            pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(lb -> {
                 lb.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
+            });
+
+            pageBuilder.addEventListener("slot-" + slot + "-input", CustomUIEventBindingType.ValueChanged, (event, ctx) -> {
+                String newValue = ctx.getValue("slot-" + slot + "-input").map(Object::toString).orElse("");
+                if (newValue.startsWith("/")) {
+                    newValue = newValue.substring(1);
+                }
+
+                if (newValue.startsWith("/")) {;
+                    newValue = "";
+                }
+                this.currentValues.put(slot, newValue);
             });
 
             pageBuilder.addEventListener("slot-" + slot + "-button-clear", CustomUIEventBindingType.Activating, (_, ctx) -> {
 
                 slots.forEach(slotIndex -> {
                     String v = ctx.getValue("slot-" + slotIndex + "-input").map(Object::toString).orElse("");
-                    currentValues.put(slotIndex, v);
+                    this.currentValues.put(slotIndex, v);
                 });
 
                 ShortcutConfig.removeCommand(uuid.toString(), slot);
 
-                currentValues.put(slot, "");
+                this.currentValues.put(slot, "");
 
-                currentValues.forEach((slotIndex, value) -> {
+                this.currentValues.forEach((slotIndex, value) -> {
                     ctx.getById("slot-" + slotIndex + "-input", TextFieldBuilder.class).ifPresent(tf -> tf.withValue(value));
                 });
 
@@ -103,6 +116,13 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                     if (newCommandValue.startsWith("/")) {
                         newCommandValue = newCommandValue.substring(1);
                     }
+
+                    this.currentValues.forEach((slotIndex, value) -> {
+                        System.out.println(slotIndex + " " + value);
+                        ctx.getById("slot-" + slotIndex + "-input", TextFieldBuilder.class).ifPresent(tf -> tf.withValue(value));
+                    });
+
+                    ctx.updatePage(true);
 
                     if (newCommandValue.isEmpty() || newCommandValue.startsWith("/")) {
                         ShortcutConfig.removeCommand(uuid.toString(), slot);
