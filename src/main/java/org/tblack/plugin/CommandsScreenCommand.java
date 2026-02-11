@@ -57,13 +57,14 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
     }
 
     private void setClearButtonsEventListener(UUID uuid, PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store, List<Integer> slots) {
+        Map<Integer, String> currentValues = new HashMap<>();
         slots.forEach(slot -> {
            pageBuilder.getById("slot-" + slot + "-input", TextFieldBuilder.class).ifPresent(lb -> {
                 lb.withValue(ShortcutConfig.getCommand(uuid.toString(), slot));
             });
 
             pageBuilder.addEventListener("slot-" + slot + "-button-clear", CustomUIEventBindingType.Activating, (_, ctx) -> {
-                Map<Integer, String> currentValues = new HashMap<>();
+
                 slots.forEach(slotIndex -> {
                     String v = ctx.getValue("slot-" + slotIndex + "-input").map(Object::toString).orElse("");
                     currentValues.put(slotIndex, v);
@@ -97,7 +98,13 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                             .map(Object::toString)
                             .orElse("");
 
-                    if (newCommandValue.isEmpty()) {
+                    newCommandValue = newCommandValue.trim();
+
+                    if (newCommandValue.startsWith("/")) {
+                        newCommandValue = newCommandValue.substring(1);
+                    }
+
+                    if (newCommandValue.isEmpty() || newCommandValue.startsWith("/")) {
                         ShortcutConfig.removeCommand(uuid.toString(), slot);
                         return;
                     }

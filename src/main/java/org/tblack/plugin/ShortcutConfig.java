@@ -70,6 +70,20 @@ public class ShortcutConfig {
     }
 
     public static void setCommand(String uuid, int slot, String command) {
+
+        if (command == null) return;
+
+        command = command.trim();
+
+        if (command.startsWith("/")) {
+            command = command.substring(1);
+        }
+
+        if (command.isEmpty()) {
+            removeCommand(uuid, slot);
+            return;
+        }
+
         Map<Integer, String> map = getForPlayer(uuid);
         map.put(slot, command);
         save();

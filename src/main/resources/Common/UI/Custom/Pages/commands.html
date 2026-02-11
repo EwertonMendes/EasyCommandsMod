@@ -1,35 +1,45 @@
 <div class="page-overlay">
-  <div class="decorated-container" data-hyui-title="My Commands" style="anchor-height: 800; anchor-width: 800;">
+  <div class="decorated-container" data-hyui-title="My Commands" style="anchor-height: 850; anchor-width: 800;">
     <div class="container-contents">
-      <div style="layout-mode: TopScrolling;">
-        <div class="header">
-          <p class="selection-text">Registered Commands for {{$playerName}}</p>
-        </div>
-        <div style="anchor-height: 30;"></div>
+      <nav id="easy-commands-tabs" class="tabs"
+           data-tabs="slots:Slots:slots-content,config:Config:config-content"
+           data-selected="slots">
+      </nav>
 
-        {{#each slots}}
-        <div class="row" style="layout-mode: Left;">
-          <div style="layout-mode: Middle;">
-            <p style="anchor-width: 60; layout-mode: Middle;">Slot {{$item}}</p>
+      <div id="slots-content" class="tab-content" data-hyui-tab-id="slots">
+        <div style="layout-mode: TopScrolling;">
+          <div style="anchor-height: 20;"></div>
+          <div class="header">
+            <p class="selection-text">Registered Commands for {{$playerName}}</p>
           </div>
-          <div style="anchor-width: 10;"></div>
-          <input type="text" id="slot-{{$item}}-input" data-hyui-flexweight="1" />
-          <div style="anchor-width: 10;"></div>
-          <button id="slot-{{$item}}-button-clear" style="anchor-width: 50;" class="secondary-button">X</button>
-        </div>
+          <div style="anchor-height: 20;"></div>
 
-        <div style="anchor-height: 30;"></div>
-        {{/each}}
-        <div style="layout-mode: Middle;">
-          <div data-hyui-flexweight="1"></div>
-          <button id="save-all-button"
-                  style="anchor-width: 200; anchor-height: 40"
-                  class="primary-button">
-            SAVE ALL
-          </button>
+          {{#each slots}}
+          <div class="row" style="layout-mode: Left;">
+            <div style="layout-mode: Middle;">
+              <p style="anchor-width: 60; layout-mode: Middle;">Slot {{$item}}</p>
+            </div>
+            <div style="anchor-width: 10;"></div>
+            <input type="text" id="slot-{{$item}}-input" data-hyui-flexweight="1" />
+            <div style="anchor-width: 10;"></div>
+            <button id="slot-{{$item}}-button-clear" style="anchor-width: 50;" class="secondary-button">X</button>
+          </div>
+
+          <div style="anchor-height: 30;"></div>
+          {{/each}}
+          <div style="layout-mode: Middle;">
+            <div data-hyui-flexweight="1"></div>
+            <button id="save-all-button"
+                    style="anchor-width: 200; anchor-height: 40"
+                    class="primary-button">
+              SAVE ALL
+            </button>
+          </div>
         </div>
       </div>
-
+      <div id="config-content" class="tab-content" data-hyui-tab-id="config">
+        <p>Config</p>
+      </div>
     </div>
   </div>
 </div>
