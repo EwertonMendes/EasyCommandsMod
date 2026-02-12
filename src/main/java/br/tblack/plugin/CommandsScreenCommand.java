@@ -54,7 +54,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerInputListeners(uuid, pageBuilder);
         registerClearListeners(uuid, pageBuilder, playerRef, store);
         registerSaveListener(uuid, pageBuilder, playerRef, store);
-        registerShowHudCheckboxListener(pageBuilder);
+        registerShowHudCheckboxListener(uuid, pageBuilder);
 
         pageBuilder.open(store);
     }
@@ -101,7 +101,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                         ctx.updatePage(true);
 
                         refreshHud(playerRef, store);
-                        this.updateCheckBoxValue(pageBuilder);
+                        this.updateCheckBoxValue(uuid, pageBuilder);
 
                         playerRef.sendMessage(
                                 Message.raw("Removed command from slot " + slot + " successfully!")
@@ -142,29 +142,29 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                         );
                     } finally {
                         refreshHud(playerRef, store);
-                        this.updateCheckBoxValue(pageBuilder);
+                        this.updateCheckBoxValue(uuid, pageBuilder);
                     }
                 }
         );
     }
 
-    private void registerShowHudCheckboxListener(PageBuilder pageBuilder) {
-        this.updateCheckBoxValue(pageBuilder);
+    private void registerShowHudCheckboxListener(UUID uuid, PageBuilder pageBuilder) {
+        this.updateCheckBoxValue(uuid, pageBuilder);
         pageBuilder.addEventListener("show-hud-checkbox", CustomUIEventBindingType.ValueChanged,
                 (_, ctx) -> {
                     boolean checkBoxValue =  ctx.getValue("show-hud-checkbox").map(Boolean.class::cast)
                             .orElse(false);
 
-                    var hud = HudStore.getHud();
+                    var hud = HudStore.getHud(uuid);
 
                     if(!checkBoxValue) {
                         hud.hide();
-                        HudStore.setIsVisible(false);
+                        HudStore.setIsVisible(uuid, false);
                     } else {
                         hud.unhide();
-                        HudStore.setIsVisible(true);
+                        HudStore.setIsVisible(uuid, true);
                     }
-                    this.updateCheckBoxValue(pageBuilder);
+                    this.updateCheckBoxValue(uuid, pageBuilder);
                 });
     }
 
@@ -241,9 +241,9 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         return "slot-" + slot + "-button-clear";
     }
 
-    private void updateCheckBoxValue(PageBuilder pageBuilder) {
+    private void updateCheckBoxValue(UUID uuid, PageBuilder pageBuilder) {
         pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent((cb) -> {
-            cb.withValue(HudStore.getIsVisible());
+            cb.withValue(HudStore.getIsVisible(uuid));
         });
     }
 }

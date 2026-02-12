@@ -11,6 +11,7 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class HUDEvent {
 
@@ -20,18 +21,19 @@ public class HUDEvent {
         Store<EntityStore> store = playerRef.getStore();
 
         PlayerRef player = store.getComponent(playerRef, PlayerRef.getComponentType());
+        if (player == null) return;
 
-        assert player != null;
+        UUID uuid = player.getUuid();
+
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerCommands", getCommandsList(player));
 
-        HudBuilder hudBuilder = HudBuilder.hudForPlayer(player)
-                .loadHtml("Huds/quick-command-hud.html", template);
+        var hud = HudBuilder.hudForPlayer(player)
+                .loadHtml("Huds/quick-command-hud.html", template)
+                .show(store);
 
-        var hud = hudBuilder.show(store);
-
-        HudStore.setHud(hud);
-        HudStore.setIsVisible(true);
+        HudStore.setHud(uuid, hud);
+        HudStore.setIsVisible(uuid, true);
     }
 
     private static List<Map<String, Object>> getCommandsList(PlayerRef player) {
@@ -48,26 +50,20 @@ public class HUDEvent {
                 .toList();
     }
 
+    public static void refreshPlayerCommandsHud(PlayerRef playerRef, Store<EntityStore> store) {
 
-    public static void refreshPlayerCommandsHud(PlayerRef playerRef, Store<EntityStore> store ) {
-        var currentHud = HudStore.getHud();
+        UUID uuid = playerRef.getUuid();
 
-        if (currentHud == null) return;
-
-        currentHud.remove();
-
-        List<Map<String, Object>> commandsList = getCommandsList(playerRef);
+        HudStore.removeHud(uuid);
 
         TemplateProcessor template = new TemplateProcessor()
-                .setVariable("playerCommands", commandsList);
+                .setVariable("playerCommands", getCommandsList(playerRef));
 
-        HudBuilder updatedHud = HudBuilder.hudForPlayer(playerRef)
-                .loadHtml("Huds/quick-command-hud.html", template);
+        var hud = HudBuilder.hudForPlayer(playerRef)
+                .loadHtml("Huds/quick-command-hud.html", template)
+                .show(store);
 
-        var hud = updatedHud.show(store);
-
-        HudStore.setHud(hud);
-        HudStore.setIsVisible(true);
+        HudStore.setHud(uuid, hud);
+        HudStore.setIsVisible(uuid, true);
     }
-
 }
