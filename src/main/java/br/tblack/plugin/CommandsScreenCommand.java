@@ -1,4 +1,4 @@
-package org.tblack.plugin;
+package br.tblack.plugin;
 
 import au.ellie.hyui.builders.CheckBoxBuilder;
 import au.ellie.hyui.builders.PageBuilder;
@@ -27,7 +27,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
     private static final List<Integer> SLOTS = List.of(1,2,3,4,5,6,7,8,9);
 
     public CommandsScreenCommand() {
-        super("cmd", "Shows a screen with all available commands for the current player.");
+        super("cmd", "Shows a screen with all available slots for registering commands to run via shortcuts.");
         this.setPermissionGroup(GameMode.Adventure);
     }
 

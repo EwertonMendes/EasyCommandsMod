@@ -1,4 +1,4 @@
-package org.tblack.plugin;
+package br.tblack.plugin;
 
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;

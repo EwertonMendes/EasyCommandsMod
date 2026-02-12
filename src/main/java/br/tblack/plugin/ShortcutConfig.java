@@ -1,4 +1,4 @@
-package org.tblack.plugin;
+package br.tblack.plugin;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

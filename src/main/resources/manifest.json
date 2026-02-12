@@ -1,14 +1,14 @@
 {
-    "Group": "Example",
+    "Group": "Tblack",
     "Name": "EasyCommandsPlugin",
-    "Version": "0.0.2",
-    "Description": "Plugin created for helping on finding and running available commands inside Hytale.",
+    "Version": "0.1.0",
+    "Description": "Run any command you want with simple keyboard shortcuts.",
     "Authors": [
         {
-            "Name": "Ewerton M. Mendes"
+            "Name": "Ewerton 'Tblack' Mendes"
         }
     ],
-    "Website": "tblack.org",
+    "Website": "tblack.br",
     "ServerVersion": "*",
     "Dependencies": {
         
@@ -17,6 +17,6 @@
         
     },
     "DisabledByDefault": false,
-    "Main": "org.tblack.plugin.CommandsScreenPlugin",
+    "Main": "br.tblack.plugin.CommandsScreenPlugin",
     "IncludesAssetPack": true
 }

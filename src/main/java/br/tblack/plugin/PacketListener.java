@@ -1,4 +1,4 @@
-package org.tblack.plugin;
+package br.tblack.plugin;
 
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.protocol.Packet;

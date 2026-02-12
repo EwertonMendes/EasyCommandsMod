@@ -1,4 +1,4 @@
-package org.tblack.plugin;
+package br.tblack.plugin;
 
 import au.ellie.hyui.builders.HudBuilder;
 import au.ellie.hyui.html.TemplateProcessor;
