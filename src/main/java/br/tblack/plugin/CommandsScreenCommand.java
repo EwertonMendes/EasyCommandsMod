@@ -1,6 +1,7 @@
 package br.tblack.plugin;
 
 import au.ellie.hyui.builders.CheckBoxBuilder;
+import au.ellie.hyui.builders.HyUIPage;
 import au.ellie.hyui.builders.PageBuilder;
 import au.ellie.hyui.builders.TextFieldBuilder;
 import au.ellie.hyui.events.UIContext;
@@ -19,12 +20,14 @@ import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
 import java.awt.*;
-import java.util.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 public class CommandsScreenCommand extends AbstractPlayerCommand {
 
-    private static final List<Integer> SLOTS = List.of(1,2,3,4,5,6,7,8,9);
+    private static final List<Integer> SLOTS = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
     public CommandsScreenCommand() {
         super("cmd", "Shows a screen with all available slots for registering commands to run via shortcuts.");
@@ -54,14 +57,11 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerInputListeners(uuid, pageBuilder);
         registerClearListeners(uuid, pageBuilder, playerRef, store);
         registerSaveListener(uuid, pageBuilder, playerRef, store);
-        registerShowHudCheckboxListener(uuid, pageBuilder);
+        registerShowHudCheckboxListener(uuid, pageBuilder, playerRef, store);
+        registerCloseButton(pageBuilder);
 
         pageBuilder.open(store);
     }
-
-    /* =========================================================
-       LISTENER REGISTRATION
-       ========================================================= */
 
     private void registerInputListeners(UUID uuid, PageBuilder pageBuilder) {
         for (Integer slot : SLOTS) {
@@ -100,8 +100,8 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
                         ctx.updatePage(true);
 
-                        refreshHud(playerRef, store);
-                        this.updateCheckBoxValue(uuid, pageBuilder);
+                        HUDEvent.onCommandsChanged(playerRef, store);
+                        updateCheckBoxValue(uuid, pageBuilder);
 
                         playerRef.sendMessage(
                                 Message.raw("Removed command from slot " + slot + " successfully!")
@@ -124,9 +124,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
                     try {
                         Map<Integer, String> commands = collectAllInputValues(ctx);
-
                         persistCommands(uuid, commands);
-
                         ctx.updatePage(true);
 
                         playerRef.sendMessage(
@@ -141,36 +139,37 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                                         .color(Color.RED)
                         );
                     } finally {
-                        refreshHud(playerRef, store);
-                        this.updateCheckBoxValue(uuid, pageBuilder);
+                        HUDEvent.onCommandsChanged(playerRef, store);
+                        updateCheckBoxValue(uuid, pageBuilder);
                     }
                 }
         );
     }
 
-    private void registerShowHudCheckboxListener(UUID uuid, PageBuilder pageBuilder) {
-        this.updateCheckBoxValue(uuid, pageBuilder);
-        pageBuilder.addEventListener("show-hud-checkbox", CustomUIEventBindingType.ValueChanged,
+    private void registerShowHudCheckboxListener(UUID uuid,
+                                                 PageBuilder pageBuilder,
+                                                 PlayerRef playerRef,
+                                                 Store<EntityStore> store) {
+        updateCheckBoxValue(uuid, pageBuilder);
+        pageBuilder.addEventListener(
+                "show-hud-checkbox",
+                CustomUIEventBindingType.ValueChanged,
                 (_, ctx) -> {
-                    boolean checkBoxValue =  ctx.getValue("show-hud-checkbox").map(Boolean.class::cast)
+                    boolean checkBoxValue = ctx.getValue("show-hud-checkbox")
+                            .map(Boolean.class::cast)
                             .orElse(false);
 
-                    var hud = HudStore.getHud(uuid);
-
-                    if(!checkBoxValue) {
-                        hud.hide();
-                        HudStore.setIsVisible(uuid, false);
-                    } else {
-                        hud.unhide();
-                        HudStore.setIsVisible(uuid, true);
-                    }
-                    this.updateCheckBoxValue(uuid, pageBuilder);
-                });
+                    HUDEvent.setHudVisible(playerRef, store, checkBoxValue);
+                    updateCheckBoxValue(uuid, pageBuilder);
+                }
+        );
     }
 
-    /* =========================================================
-       CORE LOGIC
-       ========================================================= */
+    private void registerCloseButton(PageBuilder pageBuilder) {
+        pageBuilder.addEventListener("close-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
+            ctx.getPage().ifPresent(HyUIPage::close);
+        });
+    }
 
     private Map<Integer, String> collectAllInputValues(Object ctx) {
         Map<Integer, String> values = new HashMap<>();
@@ -205,17 +204,9 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
     private void loadInitialValues(UUID uuid, PageBuilder pageBuilder) {
         for (Integer slot : SLOTS) {
             pageBuilder.getById(getInputId(slot), TextFieldBuilder.class)
-                    .ifPresent(tf ->
-                            tf.withValue(
-                                    ShortcutConfig.getCommand(uuid.toString(), slot)
-                            )
-                    );
+                    .ifPresent(tf -> tf.withValue(ShortcutConfig.getCommand(uuid.toString(), slot)));
         }
     }
-
-    /* =========================================================
-       UTIL
-       ========================================================= */
 
     private String normalizeCommand(String input) {
         if (input == null) return "";
@@ -229,10 +220,6 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         return value.trim();
     }
 
-    private void refreshHud(PlayerRef playerRef, Store<EntityStore> store) {
-        HUDEvent.refreshPlayerCommandsHud(playerRef, store);
-    }
-
     private String getInputId(int slot) {
         return "slot-" + slot + "-input";
     }
@@ -242,8 +229,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
     }
 
     private void updateCheckBoxValue(UUID uuid, PageBuilder pageBuilder) {
-        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent((cb) -> {
-            cb.withValue(HudStore.getIsVisible(uuid));
-        });
+        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class)
+                .ifPresent(cb -> cb.withValue(HudStore.getIsVisible(uuid)));
     }
 }

@@ -1,5 +1,6 @@
 package br.tblack.plugin;
 
+import au.ellie.hyui.builders.HyUIHud;
 import au.ellie.hyui.builders.HudBuilder;
 import au.ellie.hyui.html.TemplateProcessor;
 import com.hypixel.hytale.component.Ref;
@@ -16,24 +17,65 @@ import java.util.UUID;
 public class HUDEvent {
 
     public static void onPlayerReady(PlayerReadyEvent event) {
-
         Ref<EntityStore> playerRef = event.getPlayerRef();
         Store<EntityStore> store = playerRef.getStore();
-
         PlayerRef player = store.getComponent(playerRef, PlayerRef.getComponentType());
         if (player == null) return;
 
         UUID uuid = player.getUuid();
 
+        HudStore.setIsVisible(uuid, true);
+        HudStore.clearDirty(uuid);
+
+        createOrRecreateHud(player, store);
+    }
+
+    public static void onCommandsChanged(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+        if (HudStore.getIsVisible(uuid)) {
+            recreateHud(player, store);
+        } else {
+            HudStore.markDirty(uuid);
+        }
+    }
+
+    public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
+        UUID uuid = player.getUuid();
+        HudStore.setIsVisible(uuid, visible);
+
+        HyUIHud hud = HudStore.getHud(uuid);
+
+        if (!visible) {
+            if (hud != null) {
+                hud.hide();
+            }
+            return;
+        }
+
+        if (hud == null || HudStore.isDirty(uuid)) {
+            recreateHud(player, store);
+            HudStore.clearDirty(uuid);
+            return;
+        }
+
+        hud.unhide();
+    }
+
+    private static void recreateHud(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+        HudStore.removeHud(uuid);
+        createOrRecreateHud(player, store);
+    }
+
+    private static void createOrRecreateHud(PlayerRef player, Store<EntityStore> store) {
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerCommands", getCommandsList(player));
 
-        var hud = HudBuilder.hudForPlayer(player)
+        HyUIHud hud = HudBuilder.hudForPlayer(player)
                 .loadHtml("Huds/quick-command-hud.html", template)
                 .show(store);
 
-        HudStore.setHud(uuid, hud);
-        HudStore.setIsVisible(uuid, true);
+        HudStore.setHud(player.getUuid(), hud);
     }
 
     private static List<Map<String, Object>> getCommandsList(PlayerRef player) {
@@ -48,22 +90,5 @@ public class HUDEvent {
                     return m;
                 })
                 .toList();
-    }
-
-    public static void refreshPlayerCommandsHud(PlayerRef playerRef, Store<EntityStore> store) {
-
-        UUID uuid = playerRef.getUuid();
-
-        HudStore.removeHud(uuid);
-
-        TemplateProcessor template = new TemplateProcessor()
-                .setVariable("playerCommands", getCommandsList(playerRef));
-
-        var hud = HudBuilder.hudForPlayer(playerRef)
-                .loadHtml("Huds/quick-command-hud.html", template)
-                .show(store);
-
-        HudStore.setHud(uuid, hud);
-        HudStore.setIsVisible(uuid, true);
     }
 }
