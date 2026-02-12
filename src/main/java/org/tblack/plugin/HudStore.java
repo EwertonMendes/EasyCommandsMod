@@ -15,8 +15,8 @@ public class HudStore {
         return hud;
     }
 
-    public static void setIsVisible(boolean isHidden) {
-        isVisible = isHidden;
+    public static void setIsVisible(boolean visible) {
+        isVisible = visible;
     }
 
     public static boolean getIsVisible() {

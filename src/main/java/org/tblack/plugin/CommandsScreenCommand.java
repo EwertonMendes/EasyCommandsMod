@@ -101,6 +101,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                         ctx.updatePage(true);
 
                         refreshHud(playerRef, store);
+                        this.updateCheckBoxValue(pageBuilder);
 
                         playerRef.sendMessage(
                                 Message.raw("Removed command from slot " + slot + " successfully!")
@@ -141,15 +142,14 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                         );
                     } finally {
                         refreshHud(playerRef, store);
+                        this.updateCheckBoxValue(pageBuilder);
                     }
                 }
         );
     }
 
     private void registerShowHudCheckboxListener(PageBuilder pageBuilder) {
-        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent((cb) -> {
-            cb.withValue(HudStore.getIsVisible());
-        });
+        this.updateCheckBoxValue(pageBuilder);
         pageBuilder.addEventListener("show-hud-checkbox", CustomUIEventBindingType.ValueChanged,
                 (_, ctx) -> {
                     boolean checkBoxValue =  ctx.getValue("show-hud-checkbox").map(Boolean.class::cast)
@@ -164,6 +164,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                         hud.unhide();
                         HudStore.setIsVisible(true);
                     }
+                    this.updateCheckBoxValue(pageBuilder);
                 });
     }
 
@@ -238,5 +239,11 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
     private String getClearButtonId(int slot) {
         return "slot-" + slot + "-button-clear";
+    }
+
+    private void updateCheckBoxValue(PageBuilder pageBuilder) {
+        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent((cb) -> {
+            cb.withValue(HudStore.getIsVisible());
+        });
     }
 }

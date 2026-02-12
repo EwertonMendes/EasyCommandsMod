@@ -67,6 +67,7 @@ public class HUDEvent {
         var hud = updatedHud.show(store);
 
         HudStore.setHud(hud);
+        HudStore.setIsVisible(true);
     }
 
 }
