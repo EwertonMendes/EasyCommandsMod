@@ -1,4 +1,9 @@
 <div class="page-overlay">
+  <button id="close-button"
+          style="anchor-width: 110; anchor-height: 40; layout-mode: Top; anchor-top: 70; anchor-right: 560;"
+          class="secondary-button">
+    Close
+  </button>
   <div class="decorated-container" data-hyui-title="My Commands" style="anchor-height: 850; anchor-width: 800;">
     <div class="container-contents">
       <input type="hidden" id="currentTab" value="slots" />
@@ -23,13 +28,12 @@
             <div style="anchor-width: 10;"></div>
             <input type="text" id="slot-{{$item}}-input" data-hyui-flexweight="1" />
             <div style="anchor-width: 10;"></div>
-            <button id="slot-{{$item}}-button-clear" style="anchor-width: 50;" class="secondary-button">X</button>
+            <button id="slot-{{$item}}-button-clear" style="anchor-width: 50;" class="tertiary-button">X</button>
           </div>
 
           <div style="anchor-height: 30;"></div>
           {{/each}}
           <div style="layout-mode: Middle;">
-            <div data-hyui-flexweight="1"></div>
             <button id="save-all-button"
                     style="anchor-width: 200; anchor-height: 40"
                     class="primary-button">
