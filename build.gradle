@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.gradleup.shadow' version '9.3.1'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
 }
 
@@ -27,10 +28,10 @@ ext {
 }
 
 if (!project.hasProperty('hytaleHome')) {
-    throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
+    throw new GradleException('Hytale não foi detectado automaticamente. Defina hytale_home.')
 }
 else if (!file(project.findProperty('hytaleHome')).exists()) {
-    throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
+    throw new GradleException("Falha ao encontrar Hytale em ${project.findProperty('hytaleHome')}")
 }
 
 java {
@@ -39,7 +40,6 @@ java {
     withJavadocJar()
 }
 
-// Quiet warnings about missing Javadocs.
 javadoc {
     options.addStringOption('Xdoclint:-missing', '-quiet')
 }
@@ -51,28 +51,30 @@ sourceSets {
     }
 }
 
-// Adds the Hytale server as a build dependency, allowing you to reference and
-// compile against their code. This requires you to have Hytale installed using
-// the official launcher for now.
+repositories {
+    mavenCentral()
+}
+
 dependencies {
-    implementation(files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar"))
+    implementation files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
     implementation files("libs/HyUI-0.6.0-all.jar")
 }
 
-// Create the working directory to run the server if it does not already exist.
-def serverRunDir = file("$projectDir/run")
-if (!serverRunDir.exists()) {
-    serverRunDir.mkdirs()
+shadowJar {
+    archiveBaseName.set(rootProject.name)
+    archiveClassifier.set("")
+    archiveVersion.set(project.version.toString())
 }
 
-// Updates the manifest.json file with the latest properties defined in the
-// build.properties file. Currently we update the version and if packs are
-// included with the plugin.
+tasks.build {
+    dependsOn shadowJar
+}
+
 tasks.register('updatePluginManifest') {
     def manifestFile = file('src/main/resources/manifest.json')
     doLast {
         if (!manifestFile.exists()) {
-            throw new GradleException("Could not find manifest.json at ${manifestFile.path}!")
+            throw new GradleException("manifest.json não encontrado!")
         }
         def manifestJson = new groovy.json.JsonSlurper().parseText(manifestFile.text)
         manifestJson.Version = version
@@ -81,9 +83,13 @@ tasks.register('updatePluginManifest') {
     }
 }
 
-// Makes sure the plugin manifest is up to date.
 tasks.named('processResources') {
     dependsOn 'updatePluginManifest'
+}
+
+def serverRunDir = file("$projectDir/run")
+if (!serverRunDir.exists()) {
+    serverRunDir.mkdirs()
 }
 
 def createServerRunArguments(String srcDir) {
@@ -101,39 +107,11 @@ def createServerRunArguments(String srcDir) {
     return programParameters
 }
 
-// Creates a run configuration in IDEA that will run the Hytale server with
-// your plugin and the default assets.
 idea.project.settings.runConfigurations {
     'HytaleServer'(org.jetbrains.gradle.ext.Application) {
         mainClass = 'com.hypixel.hytale.Main'
         moduleName = project.idea.module.name + '.main'
         programParameters = createServerRunArguments(sourceSets.main.java.srcDirs.first().parentFile.absolutePath)
         workingDirectory = serverRunDir.absolutePath
-    }
-}
-
-// Creates a launch.json file for VSCode with the same configuration
-tasks.register('generateVSCodeLaunch') {
-    def vscodeDir = file("$projectDir/.vscode")
-    def launchFile = file("$vscodeDir/launch.json")
-    doLast {
-        if (!vscodeDir.exists()) {
-            vscodeDir.mkdirs()
-        }
-        def programParams = createServerRunArguments("\${workspaceFolder}")
-        def launchConfig = [
-            version: "0.2.0",
-            configurations: [
-                [
-                    type: "java",
-                    name: "HytaleServer",
-                    request: "launch",
-                    mainClass: "com.hypixel.hytale.Main",
-                    args: programParams,
-                    cwd: "\${workspaceFolder}/run"
-                ]
-            ]
-        ]
-        launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
     }
 }
