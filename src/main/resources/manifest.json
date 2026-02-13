@@ -1,7 +1,7 @@
 {
     "Group": "Tblack",
     "Name": "EasyCommandsPlugin",
-    "Version": "0.1.0",
+    "Version": "0.1.1",
     "Description": "Run any command you want with simple keyboard shortcuts.",
     "Authors": [
         {
