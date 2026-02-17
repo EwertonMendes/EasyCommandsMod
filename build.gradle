@@ -1,30 +1,38 @@
 plugins {
     id 'java'
     id 'com.gradleup.shadow' version '9.3.1'
+    id 'org.jetbrains.gradle.plugin.idea-ext' version '1.1.8'
 }
 
-group = 'org.tblack'
-version = (project.findProperty('version') ?: '0.1.1').toString()
+import org.gradle.internal.os.OperatingSystem
+
+def userHome = System.getProperty("user.home")
+def hytaleHome = ""
+
+if (project.hasProperty('hytale_home')) {
+    hytaleHome = project.findProperty('hytale_home').toString()
+} else {
+    def os = OperatingSystem.current()
+    if (os.isWindows()) {
+        hytaleHome = "${userHome}/AppData/Roaming/Hytale"
+    } else if (os.isMacOsX()) {
+        hytaleHome = "${userHome}/Library/Application Support/Hytale"
+    } else {
+        hytaleHome = "${userHome}/.local/share/Hytale"
+    }
+}
+hytaleHome = hytaleHome.replace('\\', '/')
+
+group = 'br.tblack'
+version = '0.1.1'
 
 def patchline = (project.findProperty('patchline') ?: 'release').toString()
-
-def hytaleHome = project.findProperty('hytale_home')
-if (hytaleHome == null || hytaleHome.toString().trim().isEmpty()) {
-    def userHome = System.getProperty('user.home')
-    hytaleHome = "${userHome}/AppData/Roaming/Hytale"
-}
-hytaleHome = hytaleHome.toString().replace('\\', '/')
-
-def serverJar = file("${hytaleHome}/install/${patchline}/package/game/latest/Server/HytaleServer.jar")
-if (!serverJar.exists()) {
-    throw new GradleException("HytaleServer.jar not found at: ${serverJar.absolutePath.replace('\\','/')}")
-}
-
-def javaVer = (project.findProperty('java_version') ?: '25').toString().toInteger()
+def gameDir = "${hytaleHome}/install/${patchline}/package/game/latest"
+def serverJarPath = "${gameDir}/Server/HytaleServer.jar"
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(javaVer)
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
@@ -34,12 +42,13 @@ repositories {
 
 configurations {
     shade
+    implementation.extendsFrom(shade)
 }
 
 dependencies {
-    compileOnly files(serverJar)
-    compileOnly files("libs/HyUI-0.6.0-all.jar")
+    compileOnly files(serverJarPath)
     shade files("libs/HyUI-0.6.0-all.jar")
+    compileOnly 'org.checkerframework:checker-qual:3.42.0'
 }
 
 tasks.withType(JavaCompile).configureEach {
@@ -47,25 +56,52 @@ tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['--enable-preview']
 }
 
-tasks.withType(Test).configureEach {
-    jvmArgs += ['--enable-preview']
-}
-
-tasks.withType(JavaExec).configureEach {
-    jvmArgs += ['--enable-preview']
-}
-
-jar {
-    enabled = false
-}
-
 shadowJar {
     archiveBaseName.set(rootProject.name)
     archiveClassifier.set("")
-    archiveVersion.set(project.version.toString())
     configurations = [project.configurations.shade]
 }
 
-tasks.build {
-    dependsOn shadowJar
+tasks.register('runServer', JavaExec) {
+    group = "hytale"
+    description = "Launch the Hytale server with the mod loaded."
+
+    dependsOn(shadowJar)
+
+    classpath = files(serverJarPath)
+    mainClass.set('com.hypixel.hytale.Main')
+
+    def runDir = file("$projectDir/run")
+    def modsDir = file("$runDir/run_mods")
+
+    doFirst {
+        if (!runDir.exists()) runDir.mkdirs()
+        if (!modsDir.exists()) modsDir.mkdirs()
+
+        modsDir.listFiles()?.each { it.delete() }
+
+        copy {
+            from(shadowJar.archiveFile)
+            into(modsDir)
+        }
+        println "MOD JAR copied to: ${modsDir.absolutePath}"
+    }
+
+    workingDir = runDir
+
+    def assetsPath = "${gameDir}/Assets.zip"
+
+    args = [
+            '--allow-op',
+            '--disable-sentry',
+            "--assets=${assetsPath}",
+            "--mods=${modsDir.absolutePath}"
+    ]
+
+    jvmArgs = [
+            '--enable-preview',
+            '--enable-native-access=ALL-UNNAMED',
+            '-Xmx2G',
+            '-Dfile.encoding=UTF-8'
+    ]
 }
