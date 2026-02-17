@@ -47,7 +47,7 @@ configurations {
 
 dependencies {
     compileOnly files(serverJarPath)
-    shade files("libs/HyUI-0.6.0-all.jar")
+    shade files("libs/HyUI-0.8.7-all.jar")
     compileOnly 'org.checkerframework:checker-qual:3.42.0'
 }
 
@@ -67,6 +67,8 @@ tasks.register('runServer', JavaExec) {
     description = "Launch the Hytale server with the mod loaded."
 
     dependsOn(shadowJar)
+
+    standardInput = System.in
 
     classpath = files(serverJarPath)
     mainClass.set('com.hypixel.hytale.Main')
