@@ -36,6 +36,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
         PacketAdapters.registerInbound(this.packetListener);
 
         ShortcutConfig.load();
+        PlayerConfig.load();
 
         this.getEntityStoreRegistry().registerComponent(MovementStatesComponent.class, MovementStatesComponent::new);
         this.getEntityStoreRegistry().registerSystem(new PlayerMovementStateSystem());

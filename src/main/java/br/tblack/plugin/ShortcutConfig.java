@@ -14,7 +14,7 @@ import java.util.Map;
 public class ShortcutConfig {
 
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private static final String CONFIG_DIR = "plugins/Shortcuts";
+    private static final String CONFIG_DIR = "plugins/EasyCommands";
     private static final String CONFIG_FILE = "shortcuts.json";
 
     private static Map<String, Map<Integer, String>> perPlayerShortcuts = new HashMap<>();

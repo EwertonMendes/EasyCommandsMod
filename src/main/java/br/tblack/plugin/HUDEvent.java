@@ -25,8 +25,13 @@ public class HUDEvent {
 
         UUID uuid = player.getUuid();
 
-        HudStore.setIsVisible(uuid, true);
+        var settings = PlayerConfig.getForPlayer(uuid.toString());
+
+        HudStore.setIsVisible(uuid, settings.showHud);
+        HudStore.setPosition(uuid, settings.hudPosition);
         HudStore.clearDirty(uuid);
+
+        if(!settings.showHud) return;
 
         createOrRecreateHud(player, store);
     }
@@ -43,12 +48,21 @@ public class HUDEvent {
     public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
         UUID uuid = player.getUuid();
         HudStore.setIsVisible(uuid, visible);
+        PlayerConfig.setShowHud(uuid.toString(), visible);
 
         HyUIHud hud = HudStore.getHud(uuid);
 
+        if (HudStore.getIsVisible(uuid)) {
+            recreateHud(player, store);
+        } else {
+            HudStore.markDirty(uuid);
+        }
+
         if (!visible) {
-            if (hud != null) hud.hide();
-            return;
+            if (hud != null) {
+                hud.hide();
+                return;
+            }
         }
 
         if (hud == null || HudStore.isDirty(uuid)) {
@@ -63,6 +77,7 @@ public class HUDEvent {
     public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
         UUID uuid = player.getUuid();
         HudStore.setPosition(uuid, preset);
+        PlayerConfig.setHudPosition(uuid.toString(), preset);
 
         if (HudStore.getIsVisible(uuid)) {
             recreateHud(player, store);
@@ -81,6 +96,7 @@ public class HUDEvent {
         UUID uuid = player.getUuid();
 
         String hudStyle = HudStore.getPosition(uuid).getStyle();
+        var isVisible = HudStore.getIsVisible(uuid);
 
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerCommands", getCommandsList(player))

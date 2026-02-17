@@ -61,16 +61,14 @@
               <p style="layout-mode: Middle;">Commands Hud Position</p>
             </div>
             <div data-hyui-flexweight="1"></div>
-            <div class="btn-row">
-              <select id="hud-position" value="{{$hudPosition}}">
-                <option value="TOP_LEFT">Top Left</option>
-                <option value="TOP_RIGHT">Top Right</option>
-                <option value="CENTER_LEFT">Center Left</option>
-                <option value="CENTER_RIGHT">Center Right</option>
-                <option value="BOTTOM_LEFT">Bottom Left</option>
-                <option value="BOTTOM_RIGHT">Bottom Right</option>
-              </select>
-            </div>
+            <select id="hud-position" value="{{$hudPosition}}">
+              <option value="TOP_LEFT">Top Left</option>
+              <option value="TOP_RIGHT">Top Right</option>
+              <option value="CENTER_LEFT">Center Left</option>
+              <option value="CENTER_RIGHT">Center Right</option>
+              <option value="BOTTOM_LEFT">Bottom Left</option>
+              <option value="BOTTOM_RIGHT">Bottom Right</option>
+            </select>
           </div>
 
           <div style="anchor-height: 16;"></div>
@@ -80,7 +78,10 @@
               <p style="layout-mode: Middle;">Language</p>
             </div>
             <div data-hyui-flexweight="1"></div>
-            <p style="layout-mode: Middle;">Soon</p>
+            <select id="language" value="{{$language}}">
+              <option value="en_US">English (US)</option>
+              <option value="pt_BR">Português (BR)</option>
+            </select>
           </div>
 
           <div style="anchor-height: 20;"></div>

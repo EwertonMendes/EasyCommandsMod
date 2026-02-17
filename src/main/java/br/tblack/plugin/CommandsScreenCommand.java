@@ -1,9 +1,6 @@
 package br.tblack.plugin;
 
-import au.ellie.hyui.builders.CheckBoxBuilder;
-import au.ellie.hyui.builders.HyUIPage;
-import au.ellie.hyui.builders.PageBuilder;
-import au.ellie.hyui.builders.TextFieldBuilder;
+import au.ellie.hyui.builders.*;
 import au.ellie.hyui.events.UIContext;
 import au.ellie.hyui.html.TemplateProcessor;
 import br.tblack.plugin.enums.HudPositionPreset;
@@ -46,12 +43,14 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         UUID uuid = context.sender().getUuid();
 
-        String hudPosition = HudStore.getPosition(playerRef.getUuid()).toString();
+        String hudPosition = PlayerConfig.getHudPosition(playerRef.getUuid().toString()).toString();
+        String language = PlayerConfig.getLanguage(uuid.toString());
 
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerName", playerRef.getUsername())
                 .setVariable("slots", SLOTS)
-                .setVariable("hudPosition", hudPosition);;
+                .setVariable("hudPosition", hudPosition)
+                .setVariable("language", language);
 
         PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef)
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
@@ -64,6 +63,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerShowHudCheckboxListener(uuid, pageBuilder, playerRef, store);
         registerCloseButtonListener(pageBuilder);
         registerHudSelectionListener(playerRef, store, pageBuilder);
+        registerLanguageSelectionListener(playerRef, pageBuilder);
 
         pageBuilder.open(store);
     }
@@ -155,6 +155,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                                                  PageBuilder pageBuilder,
                                                  PlayerRef playerRef,
                                                  Store<EntityStore> store) {
+        HudStore.setIsVisible(uuid, PlayerConfig.isShowHud(uuid.toString()));
         updateCheckBoxValue(uuid, pageBuilder);
         pageBuilder.addEventListener(
                 "show-hud-checkbox",
@@ -181,7 +182,18 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
             var selectedHudPosition = ctx.getValue("hud-position").map(Object::toString)
                     .orElse("");
 
-            HUDEvent.setHudPosition(playerRef, store, HudPositionPreset.valueOf(selectedHudPosition));
+            var hudPreset = HudPositionPreset.valueOf(selectedHudPosition);
+
+            HUDEvent.setHudPosition(playerRef, store, hudPreset);
+        });
+    }
+
+    private void registerLanguageSelectionListener(PlayerRef playerRef, PageBuilder pageBuilder) {
+        pageBuilder.addEventListener("language", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
+            var selectedLanguage = ctx.getValue("language").map(Object::toString)
+                    .orElse("");
+
+            PlayerConfig.setLanguage(playerRef.getUuid().toString(), selectedLanguage);
         });
     }
 
@@ -220,6 +232,10 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
             pageBuilder.getById(getInputId(slot), TextFieldBuilder.class)
                     .ifPresent(tf -> tf.withValue(ShortcutConfig.getCommand(uuid.toString(), slot)));
         }
+
+        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent(cb -> cb.withValue(PlayerConfig.isShowHud(uuid.toString())));
+        pageBuilder.getById("hud-position", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getHudPosition(uuid.toString()).toString()));
+        pageBuilder.getById("language", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getLanguage(uuid.toString())));
     }
 
     private String normalizeCommand(String input) {
