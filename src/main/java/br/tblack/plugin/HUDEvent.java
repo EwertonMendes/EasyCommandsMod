@@ -3,6 +3,7 @@ package br.tblack.plugin;
 import au.ellie.hyui.builders.HyUIHud;
 import au.ellie.hyui.builders.HudBuilder;
 import au.ellie.hyui.html.TemplateProcessor;
+import br.tblack.plugin.enums.HudPositionPreset;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
@@ -46,9 +47,7 @@ public class HUDEvent {
         HyUIHud hud = HudStore.getHud(uuid);
 
         if (!visible) {
-            if (hud != null) {
-                hud.hide();
-            }
+            if (hud != null) hud.hide();
             return;
         }
 
@@ -61,6 +60,17 @@ public class HUDEvent {
         hud.unhide();
     }
 
+    public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
+        UUID uuid = player.getUuid();
+        HudStore.setPosition(uuid, preset);
+
+        if (HudStore.getIsVisible(uuid)) {
+            recreateHud(player, store);
+        } else {
+            HudStore.markDirty(uuid);
+        }
+    }
+
     private static void recreateHud(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
         HudStore.removeHud(uuid);
@@ -68,14 +78,19 @@ public class HUDEvent {
     }
 
     private static void createOrRecreateHud(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+
+        String hudStyle = HudStore.getPosition(uuid).getStyle();
+
         TemplateProcessor template = new TemplateProcessor()
-                .setVariable("playerCommands", getCommandsList(player));
+                .setVariable("playerCommands", getCommandsList(player))
+                .setVariable("hudStyle", hudStyle);
 
         HyUIHud hud = HudBuilder.hudForPlayer(player)
                 .loadHtml("Huds/quick-command-hud.html", template)
                 .show(store);
 
-        HudStore.setHud(player.getUuid(), hud);
+        HudStore.setHud(uuid, hud);
     }
 
     private static List<Map<String, Object>> getCommandsList(PlayerRef player) {

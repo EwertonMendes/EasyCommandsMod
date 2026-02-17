@@ -6,6 +6,7 @@ import au.ellie.hyui.builders.PageBuilder;
 import au.ellie.hyui.builders.TextFieldBuilder;
 import au.ellie.hyui.events.UIContext;
 import au.ellie.hyui.html.TemplateProcessor;
+import br.tblack.plugin.enums.HudPositionPreset;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.protocol.GameMode;
@@ -45,9 +46,12 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         UUID uuid = context.sender().getUuid();
 
+        String hudPosition = HudStore.getPosition(playerRef.getUuid()).toString();
+
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerName", playerRef.getUsername())
-                .setVariable("slots", SLOTS);
+                .setVariable("slots", SLOTS)
+                .setVariable("hudPosition", hudPosition);;
 
         PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef)
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
@@ -58,7 +62,8 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerClearListeners(uuid, pageBuilder, playerRef, store);
         registerSaveListener(uuid, pageBuilder, playerRef, store);
         registerShowHudCheckboxListener(uuid, pageBuilder, playerRef, store);
-        registerCloseButton(pageBuilder);
+        registerCloseButtonListener(pageBuilder);
+        registerHudSelectionListener(playerRef, store, pageBuilder);
 
         pageBuilder.open(store);
     }
@@ -165,9 +170,18 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         );
     }
 
-    private void registerCloseButton(PageBuilder pageBuilder) {
+    private void registerCloseButtonListener(PageBuilder pageBuilder) {
         pageBuilder.addEventListener("close-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
             ctx.getPage().ifPresent(HyUIPage::close);
+        });
+    }
+
+    private void registerHudSelectionListener(PlayerRef playerRef, Store<EntityStore> store, PageBuilder pageBuilder) {
+        pageBuilder.addEventListener("hud-position", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
+            var selectedHudPosition = ctx.getValue("hud-position").map(Object::toString)
+                    .orElse("");
+
+            HUDEvent.setHudPosition(playerRef, store, HudPositionPreset.valueOf(selectedHudPosition));
         });
     }
 

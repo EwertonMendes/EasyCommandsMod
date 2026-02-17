@@ -45,32 +45,45 @@
       <div id="config-content" class="tab-content" data-hyui-tab-id="config">
         <div style="layout-mode: TopScrolling;">
           <div style="anchor-height: 20;"></div>
-          <div class="row" style="layout-mode: Left;">
-            <div style="layout-mode: Middle;">
+
+          <div class="row" style="layout-mode: Left; anchor-height: 44;">
+            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
               <p style="layout-mode: Middle;">Show Commands Hud</p>
             </div>
-            <div style="anchor-width: 10;"></div>
-            <input type="checkbox" id="show-hud-checkbox"/>
-            <div style="anchor-width: 10;"></div>
+            <div data-hyui-flexweight="1"></div>
+            <input type="checkbox" id="show-hud-checkbox" />
           </div>
-          <div style="anchor-height: 20;"></div>
-          <div class="row" style="layout-mode: Left;">
-            <div style="layout-mode: Middle;">
+
+          <div style="anchor-height: 16;"></div>
+
+          <div class="row" style="layout-mode: Left; anchor-height: 44;">
+            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
               <p style="layout-mode: Middle;">Commands Hud Position</p>
             </div>
-            <div style="anchor-width: 10;"></div>
-            <p style="layout-mode: Middle;">Soon</p>
-            <div style="anchor-width: 10;"></div>
+            <div data-hyui-flexweight="1"></div>
+            <div class="btn-row">
+              <select id="hud-position" value="{{$hudPosition}}">
+                <option value="TOP_LEFT">Top Left</option>
+                <option value="TOP_RIGHT">Top Right</option>
+                <option value="CENTER_LEFT">Center Left</option>
+                <option value="CENTER_RIGHT">Center Right</option>
+                <option value="BOTTOM_LEFT">Bottom Left</option>
+                <option value="BOTTOM_RIGHT">Bottom Right</option>
+              </select>
+            </div>
           </div>
-          <div style="anchor-height: 20;"></div>
-          <div class="row" style="layout-mode: Left;">
-            <div style="layout-mode: Middle;">
+
+          <div style="anchor-height: 16;"></div>
+
+          <div class="row" style="layout-mode: Left; anchor-height: 44;">
+            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
               <p style="layout-mode: Middle;">Language</p>
             </div>
-            <div style="anchor-width: 10;"></div>
+            <div data-hyui-flexweight="1"></div>
             <p style="layout-mode: Middle;">Soon</p>
-            <div style="anchor-width: 10;"></div>
           </div>
+
+          <div style="anchor-height: 20;"></div>
         </div>
       </div>
     </div>

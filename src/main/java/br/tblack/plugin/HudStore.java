@@ -1,6 +1,7 @@
 package br.tblack.plugin;
 
 import au.ellie.hyui.builders.HyUIHud;
+import br.tblack.plugin.enums.HudPositionPreset;
 
 import java.util.Map;
 import java.util.UUID;
@@ -11,6 +12,7 @@ public class HudStore {
     private static final Map<UUID, HyUIHud> huds = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> visibility = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> dirty = new ConcurrentHashMap<>();
+    private static final Map<UUID, HudPositionPreset> position = new ConcurrentHashMap<>();
 
     public static void setHud(UUID uuid, HyUIHud hud) {
         huds.put(uuid, hud);
@@ -45,5 +47,13 @@ public class HudStore {
 
     public static void clearDirty(UUID uuid) {
         dirty.put(uuid, false);
+    }
+
+    public static void setPosition(UUID uuid, HudPositionPreset preset) {
+        position.put(uuid, preset == null ? HudPositionPreset.TOP_LEFT : preset);
+    }
+
+    public static HudPositionPreset getPosition(UUID uuid) {
+        return position.getOrDefault(uuid, HudPositionPreset.TOP_LEFT);
     }
 }
