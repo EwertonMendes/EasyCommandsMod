@@ -26,6 +26,11 @@ public final class PacketListener implements PlayerPacketFilter {
             "gm c", "gm a"
     );
 
+    private static final Set<String> PERMITTED_GAMEMODE_COMMANDS = Set.of(
+            "gamemode adventure", "gamemode creative",
+            "gamemode a", "gamemode c"
+    );
+
     @Override
     public boolean test(@Nonnull PlayerRef player, @Nonnull Packet packet) {
         UUID playerUuid = player.getUuid();
@@ -48,7 +53,7 @@ public final class PacketListener implements PlayerPacketFilter {
 
         String normalized = normalize(msg);
 
-        if (normalized.equals("gamemode a") || normalized.equals("gamemode c")) {
+        if (PERMITTED_GAMEMODE_COMMANDS.contains(normalized)) {
             long now = System.currentTimeMillis();
 
             InteractionTracker.suppressShortcutUntil.put(uuid, now + InteractionTracker.SUPPRESS_AFTER_MANUAL_GM_MS);
@@ -129,7 +134,7 @@ public final class PacketListener implements PlayerPacketFilter {
     }
 
     private static boolean isGameModeSwapTrigger(InteractionType type) {
-        return type == InteractionType.GameModeSwap || type == InteractionType.EntityStatEffect;
+        return type == InteractionType.GameModeSwap;
     }
 
     private static String normalize(String s) {
