@@ -7,12 +7,12 @@ import com.hypixel.hytale.component.query.Query;
 import com.hypixel.hytale.component.system.tick.EntityTickingSystem;
 import com.hypixel.hytale.protocol.MovementStates;
 import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
-import com.hypixel.hytale.server.core.command.system.CommandManager;
 
 import javax.annotation.Nonnull;
 import java.awt.*;
@@ -38,23 +38,32 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
             @Nonnull CommandBuffer<EntityStore> commandBuffer
     ) {
 
-        MovementStatesComponent movement =
-                chunk.getComponent(index, MovementStatesComponent.getComponentType());
-
+        MovementStatesComponent movement = chunk.getComponent(index, MovementStatesComponent.getComponentType());
         if (movement == null) return;
 
         MovementStates states = movement.getMovementStates();
-
         var playerRef = chunk.getReferenceTo(index);
 
         Player player = store.getComponent(playerRef, Player.getComponentType());
-        UUIDComponent UuidComponent = store.getComponent(playerRef, UUIDComponent.getComponentType());
+        UUIDComponent uuidComponent = store.getComponent(playerRef, UUIDComponent.getComponentType());
+        if (player == null || uuidComponent == null) return;
 
-        assert UuidComponent != null;
-        UUID uuid = UuidComponent.getUuid();
+        UUID uuid = uuidComponent.getUuid();
+        PlayerConfig.ActivationMode mode = PlayerConfig.getActivationMode(uuid.toString());
 
-        if (!states.crouching || !states.idle || !states.horizontalIdle) {
-            InteractionTracker.triggeredShortcut.remove(uuid);
+        if (mode == PlayerConfig.ActivationMode.CTRL_F) {
+            handleCtrlF(player, commandBuffer, uuid, states);
+            return;
+        }
+
+        if (mode == PlayerConfig.ActivationMode.O_ONLY) {
+            handleOOnly(player, commandBuffer, uuid);
+        }
+    }
+
+    private void handleOOnly(Player player, CommandBuffer<EntityStore> commandBuffer, UUID uuid) {
+
+        if (!Boolean.TRUE.equals(InteractionTracker.pendingO.remove(uuid))) {
             return;
         }
 
@@ -63,33 +72,62 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
             return;
         }
 
+        InteractionTracker.triggeredShortcut.put(uuid, true);
+
+        runSlot(player, commandBuffer, uuid);
+
+        InteractionTracker.triggeredShortcut.remove(uuid);
+    }
+
+    private void handleCtrlF(Player player,
+                             CommandBuffer<EntityStore> commandBuffer,
+                             UUID uuid,
+                             MovementStates states) {
+
+        if (!states.crouching || !states.idle || !states.horizontalIdle) {
+            InteractionTracker.triggeredShortcut.remove(uuid);
+            return;
+        }
+
+        Boolean alreadyTriggered = InteractionTracker.triggeredShortcut.get(uuid);
+        if (alreadyTriggered != null && alreadyTriggered) return;
+
         Long lastUseTime = InteractionTracker.lastUsePress.get(uuid);
         if (lastUseTime == null) return;
 
         long now = System.currentTimeMillis();
+        if (now - lastUseTime > InteractionTracker.USE_VALID_MS) return;
 
-        if (now - lastUseTime <= InteractionTracker.USE_VALID_MS) {
+        InteractionTracker.triggeredShortcut.put(uuid, true);
 
-            InteractionTracker.triggeredShortcut.put(uuid, true);
+        runSlot(player, commandBuffer, uuid);
 
-            Inventory inv = player.getInventory();
-            byte activeSlot = inv.getActiveHotbarSlot();
-            int slotNumber = activeSlot + 1;
+        InteractionTracker.lastUsePress.remove(uuid);
+        InteractionTracker.triggeredShortcut.remove(uuid);
+    }
 
-            String cmd = ShortcutConfig.getCommand(uuid.toString(), slotNumber);
+    private void runSlot(Player player,
+                         CommandBuffer<EntityStore> commandBuffer,
+                         UUID uuid) {
 
-            if (cmd != null && !cmd.isEmpty()) {
+        Inventory inv = player.getInventory();
+        byte activeSlot = inv.getActiveHotbarSlot();
+        int slotNumber = activeSlot + 1;
 
-                player.sendMessage(Message.raw("Running Command /" + cmd).color(Color.GREEN));
+        String cmd = ShortcutConfig.getCommand(uuid.toString(), slotNumber);
 
-                commandBuffer.run((_) ->
-                        CommandManager.get().handleCommand(player, cmd)
-                );
-            } else {
-                player.sendMessage(Message.raw("No configured command for slot " + slotNumber));
-            }
+        if (cmd != null && !cmd.isEmpty()) {
+            player.sendMessage(
+                    Message.raw("Running Command /" + cmd).color(Color.GREEN)
+            );
 
-            InteractionTracker.lastUsePress.remove(uuid);
+            commandBuffer.run((_) ->
+                    CommandManager.get().handleCommand(player, cmd)
+            );
+        } else {
+            player.sendMessage(
+                    Message.raw("No configured command for slot " + slotNumber)
+            );
         }
     }
 }

@@ -4,21 +4,17 @@ import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.io.adapter.PacketAdapters;
+import com.hypixel.hytale.server.core.io.adapter.PacketFilter;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 
 import javax.annotation.Nonnull;
 import java.util.logging.Level;
 
-
-/**
- * This class serves as the entrypoint for your plugin. Use the setup method to register into game registries or add
- * event listeners.
- */
 public class CommandsScreenPlugin extends JavaPlugin {
 
     private static final HytaleLogger LOGGER = HytaleLogger.forEnclosingClass();
-    private PacketListener packetListener;
+    private PacketFilter inboundFilter;
 
     public CommandsScreenPlugin(@Nonnull JavaPluginInit init) {
         super(init);
@@ -29,14 +25,13 @@ public class CommandsScreenPlugin extends JavaPlugin {
     protected void start() {
         getLogger().at(Level.INFO).log("EasyCommands has started successfully!");
 
-        getCommandRegistry().registerCommand((new CommandsScreenCommand()));
+        getCommandRegistry().registerCommand(new CommandsScreenCommand());
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);
-
-        this.packetListener = new PacketListener();
-        PacketAdapters.registerInbound(this.packetListener);
 
         ShortcutConfig.load();
         PlayerConfig.load();
+
+        this.inboundFilter = PacketAdapters.registerInbound(new PacketListener());
 
         this.getEntityStoreRegistry().registerComponent(MovementStatesComponent.class, MovementStatesComponent::new);
         this.getEntityStoreRegistry().registerSystem(new PlayerMovementStateSystem());
@@ -45,9 +40,9 @@ public class CommandsScreenPlugin extends JavaPlugin {
     @Override
     public void shutdown() {
         getLogger().at(Level.INFO).log("Plugin stopping.");
-        if (this.packetListener != null) {
-            PacketAdapters.registerInbound(this.packetListener);
+        if (this.inboundFilter != null) {
+            PacketAdapters.deregisterInbound(this.inboundFilter);
+            this.inboundFilter = null;
         }
     }
 }
-

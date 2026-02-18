@@ -24,14 +24,13 @@ public class HUDEvent {
         if (player == null) return;
 
         UUID uuid = player.getUuid();
-
         var settings = PlayerConfig.getForPlayer(uuid.toString());
 
         HudStore.setIsVisible(uuid, settings.showHud);
         HudStore.setPosition(uuid, settings.hudPosition);
         HudStore.clearDirty(uuid);
 
-        if(!settings.showHud) return;
+        if (!settings.showHud) return;
 
         createOrRecreateHud(player, store);
     }
@@ -96,7 +95,6 @@ public class HUDEvent {
         UUID uuid = player.getUuid();
 
         String hudStyle = HudStore.getPosition(uuid).getStyle();
-        var isVisible = HudStore.getIsVisible(uuid);
 
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerCommands", getCommandsList(player))

@@ -45,12 +45,14 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
         String hudPosition = PlayerConfig.getHudPosition(playerRef.getUuid().toString()).toString();
         String language = PlayerConfig.getLanguage(uuid.toString());
+        String activationMode = PlayerConfig.getActivationMode(uuid.toString()).name();
 
         TemplateProcessor template = new TemplateProcessor()
                 .setVariable("playerName", playerRef.getUsername())
                 .setVariable("slots", SLOTS)
                 .setVariable("hudPosition", hudPosition)
-                .setVariable("language", language);
+                .setVariable("language", language)
+                .setVariable("activationMode", activationMode);
 
         PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef)
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
@@ -64,6 +66,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         registerCloseButtonListener(pageBuilder);
         registerHudSelectionListener(playerRef, store, pageBuilder);
         registerLanguageSelectionListener(playerRef, pageBuilder);
+        registerActivationModeSelectionListener(playerRef, pageBuilder);
 
         pageBuilder.open(store);
     }
@@ -197,6 +200,19 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         });
     }
 
+    private void registerActivationModeSelectionListener(PlayerRef playerRef, PageBuilder pageBuilder) {
+        pageBuilder.addEventListener("activation-mode", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
+            var value = ctx.getValue("activation-mode").map(Object::toString).orElse("");
+            PlayerConfig.ActivationMode mode;
+            try {
+                mode = PlayerConfig.ActivationMode.valueOf(value);
+            } catch (Exception e) {
+                mode = PlayerConfig.ActivationMode.CTRL_F;
+            }
+            PlayerConfig.setActivationMode(playerRef.getUuid().toString(), mode);
+        });
+    }
+
     private Map<Integer, String> collectAllInputValues(Object ctx) {
         Map<Integer, String> values = new HashMap<>();
 
@@ -236,6 +252,7 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent(cb -> cb.withValue(PlayerConfig.isShowHud(uuid.toString())));
         pageBuilder.getById("hud-position", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getHudPosition(uuid.toString()).toString()));
         pageBuilder.getById("language", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getLanguage(uuid.toString())));
+        pageBuilder.getById("activation-mode", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getActivationMode(uuid.toString()).name()));
     }
 
     private String normalizeCommand(String input) {

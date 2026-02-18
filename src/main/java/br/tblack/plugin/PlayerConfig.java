@@ -14,6 +14,11 @@ import java.util.Map;
 
 public class PlayerConfig {
 
+    public enum ActivationMode {
+        CTRL_F,
+        O_ONLY
+    }
+
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
     private static final String CONFIG_DIR = "plugins/EasyCommands";
@@ -26,9 +31,7 @@ public class PlayerConfig {
     public static void load() {
         try {
             File dir = new File(CONFIG_DIR);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
+            if (!dir.exists()) dir.mkdirs();
 
             File file = new File(dir, CONFIG_FILE);
             if (!file.exists()) {
@@ -50,9 +53,7 @@ public class PlayerConfig {
     public static void save() {
         try {
             File dir = new File(CONFIG_DIR);
-            if (!dir.exists()) {
-                dir.mkdirs();
-            }
+            if (!dir.exists()) dir.mkdirs();
 
             File file = new File(dir, CONFIG_FILE);
             try (FileWriter writer = new FileWriter(file)) {
@@ -107,22 +108,36 @@ public class PlayerConfig {
         return getForPlayer(uuid).language;
     }
 
+    public static void setActivationMode(String uuid, ActivationMode mode) {
+        PlayerConfigData cfg = getForPlayer(uuid);
+        cfg.activationMode = (mode == null) ? ActivationMode.CTRL_F : mode;
+        perPlayerConfig.put(uuid, cfg);
+        save();
+    }
+
+    public static ActivationMode getActivationMode(String uuid) {
+        return getForPlayer(uuid).activationMode;
+    }
+
     public static class PlayerConfigData {
         public boolean showHud;
         public HudPositionPreset hudPosition;
         public String language;
+        public ActivationMode activationMode;
 
         public static PlayerConfigData defaults() {
             PlayerConfigData d = new PlayerConfigData();
             d.showHud = true;
             d.hudPosition = HudPositionPreset.TOP_RIGHT;
             d.language = "en_US";
+            d.activationMode = ActivationMode.CTRL_F;
             return d;
         }
 
         public void normalize() {
             if (hudPosition == null) hudPosition = HudPositionPreset.TOP_RIGHT;
             if (language == null || language.trim().isEmpty()) language = "en_US";
+            if (activationMode == null) activationMode = ActivationMode.CTRL_F;
         }
     }
 }
