@@ -18,54 +18,67 @@ import java.util.UUID;
 public class HUDEvent {
 
     public static void onPlayerReady(PlayerReadyEvent event) {
-        Ref<EntityStore> playerRef = event.getPlayerRef();
-        Store<EntityStore> store = playerRef.getStore();
-        PlayerRef player = store.getComponent(playerRef, PlayerRef.getComponentType());
-        if (player == null) return;
+        PlayerContext ctx = resolvePlayer(event);
+        if (ctx == null) return;
 
-        UUID uuid = player.getUuid();
+        UUID uuid = ctx.player.getUuid();
         var settings = PlayerConfig.getForPlayer(uuid.toString());
 
         HudStore.setIsVisible(uuid, settings.showHud);
         HudStore.setPosition(uuid, settings.hudPosition);
         HudStore.clearDirty(uuid);
 
-        if (!settings.showHud) return;
-
-        createOrRecreateHud(player, store);
+        if (settings.showHud) {
+            rebuildHud(ctx.player, ctx.store);
+        }
     }
 
     public static void onCommandsChanged(PlayerRef player, Store<EntityStore> store) {
-        UUID uuid = player.getUuid();
-        if (HudStore.getIsVisible(uuid)) {
-            recreateHud(player, store);
-        } else {
-            HudStore.markDirty(uuid);
-        }
+        handleHudInvalidation(player, store);
     }
 
     public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
         UUID uuid = player.getUuid();
+
         HudStore.setIsVisible(uuid, visible);
         PlayerConfig.setShowHud(uuid.toString(), visible);
 
+        if (!visible) {
+            HyUIHud hud = HudStore.getHud(uuid);
+            if (hud != null) hud.hide();
+            HudStore.markDirty(uuid);
+            return;
+        }
+
+        showHudEnsuringFresh(player, store);
+    }
+
+    public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
+        UUID uuid = player.getUuid();
+
+        HudStore.setPosition(uuid, preset);
+        PlayerConfig.setHudPosition(uuid.toString(), preset);
+
+        handleHudInvalidation(player, store);
+    }
+
+    private static void handleHudInvalidation(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+
+        if (!HudStore.getIsVisible(uuid)) {
+            HudStore.markDirty(uuid);
+            return;
+        }
+
+        rebuildHud(player, store);
+    }
+
+    private static void showHudEnsuringFresh(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
         HyUIHud hud = HudStore.getHud(uuid);
 
-        if (HudStore.getIsVisible(uuid)) {
-            recreateHud(player, store);
-        } else {
-            HudStore.markDirty(uuid);
-        }
-
-        if (!visible) {
-            if (hud != null) {
-                hud.hide();
-                return;
-            }
-        }
-
         if (hud == null || HudStore.isDirty(uuid)) {
-            recreateHud(player, store);
+            rebuildHud(player, store);
             HudStore.clearDirty(uuid);
             return;
         }
@@ -73,25 +86,14 @@ public class HUDEvent {
         hud.unhide();
     }
 
-    public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
-        UUID uuid = player.getUuid();
-        HudStore.setPosition(uuid, preset);
-        PlayerConfig.setHudPosition(uuid.toString(), preset);
-
-        if (HudStore.getIsVisible(uuid)) {
-            recreateHud(player, store);
-        } else {
-            HudStore.markDirty(uuid);
-        }
-    }
-
-    private static void recreateHud(PlayerRef player, Store<EntityStore> store) {
+    private static void rebuildHud(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
         HudStore.removeHud(uuid);
-        createOrRecreateHud(player, store);
+        HyUIHud hud = buildHud(player, store);
+        HudStore.setHud(uuid, hud);
     }
 
-    private static void createOrRecreateHud(PlayerRef player, Store<EntityStore> store) {
+    private static HyUIHud buildHud(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
 
         String hudStyle = HudStore.getPosition(uuid).getStyle();
@@ -100,11 +102,9 @@ public class HUDEvent {
                 .setVariable("playerCommands", getCommandsList(player))
                 .setVariable("hudStyle", hudStyle);
 
-        HyUIHud hud = HudBuilder.hudForPlayer(player)
+        return HudBuilder.hudForPlayer(player)
                 .loadHtml("Huds/quick-command-hud.html", template)
                 .show(store);
-
-        HudStore.setHud(uuid, hud);
     }
 
     private static List<Map<String, Object>> getCommandsList(PlayerRef player) {
@@ -120,4 +120,14 @@ public class HUDEvent {
                 })
                 .toList();
     }
+
+    private static PlayerContext resolvePlayer(PlayerReadyEvent event) {
+        Ref<EntityStore> ref = event.getPlayerRef();
+        Store<EntityStore> store = ref.getStore();
+        PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
+        if (player == null) return null;
+        return new PlayerContext(player, store);
+    }
+
+    private record PlayerContext(PlayerRef player, Store<EntityStore> store) {}
 }
