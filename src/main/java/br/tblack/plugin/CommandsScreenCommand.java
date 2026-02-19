@@ -1,6 +1,10 @@
 package br.tblack.plugin;
 
-import au.ellie.hyui.builders.*;
+import au.ellie.hyui.builders.CheckBoxBuilder;
+import au.ellie.hyui.builders.DropdownBoxBuilder;
+import au.ellie.hyui.builders.HyUIPage;
+import au.ellie.hyui.builders.PageBuilder;
+import au.ellie.hyui.builders.TextFieldBuilder;
 import au.ellie.hyui.events.UIContext;
 import au.ellie.hyui.html.TemplateProcessor;
 import br.tblack.plugin.enums.HudPositionPreset;
@@ -17,7 +21,7 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.checkerframework.checker.nullness.compatqual.NonNullDecl;
 
-import java.awt.*;
+import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +29,14 @@ import java.util.UUID;
 
 public class CommandsScreenCommand extends AbstractPlayerCommand {
 
-    private static final List<Integer> SLOTS = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
+    private static final List<Integer> COMMAND_SLOTS = List.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
+
+    private static final String SAVE_ALL_BUTTON_ID = "save-all-button";
+    private static final String CLOSE_BUTTON_ID = "close-button";
+    private static final String SHOW_HUD_CHECKBOX_ID = "show-hud-checkbox";
+    private static final String HUD_POSITION_DROPDOWN_ID = "hud-position";
+    private static final String LANGUAGE_DROPDOWN_ID = "language";
+    private static final String ACTIVATION_MODE_DROPDOWN_ID = "activation-mode";
 
     public CommandsScreenCommand() {
         super("cmd", "Shows a screen with all available slots for registering commands to run via shortcuts.");
@@ -34,85 +45,90 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
     @Override
     protected void execute(
-            @NonNullDecl CommandContext context,
+            @NonNullDecl CommandContext commandContext,
             @NonNullDecl Store<EntityStore> store,
             @NonNullDecl Ref<EntityStore> ref,
             @NonNullDecl PlayerRef playerRef,
             @NonNullDecl World world
     ) {
+        UUID playerUuid = commandContext.sender().getUuid();
 
-        UUID uuid = context.sender().getUuid();
-
-        String hudPosition = PlayerConfig.getHudPosition(playerRef.getUuid().toString()).toString();
-        String language = PlayerConfig.getLanguage(uuid.toString());
-        String activationMode = PlayerConfig.getActivationMode(uuid.toString()).name();
-
-        TemplateProcessor template = new TemplateProcessor()
-                .setVariable("playerName", playerRef.getUsername())
-                .setVariable("slots", SLOTS)
-                .setVariable("hudPosition", hudPosition)
-                .setVariable("language", language)
-                .setVariable("activationMode", activationMode);
+        TemplateProcessor template = buildTemplate(playerUuid, playerRef);
 
         PageBuilder pageBuilder = PageBuilder.pageForPlayer(playerRef)
                 .withLifetime(CustomPageLifetime.CanDismissOrCloseThroughInteraction)
                 .loadHtml("Pages/commands.html", template);
 
-        loadInitialValues(uuid, pageBuilder);
-        registerInputListeners(uuid, pageBuilder);
-        registerClearListeners(uuid, pageBuilder, playerRef, store);
-        registerSaveListener(uuid, pageBuilder, playerRef, store);
-        registerShowHudCheckboxListener(uuid, pageBuilder, playerRef, store);
-        registerCloseButtonListener(pageBuilder);
-        registerHudSelectionListener(playerRef, store, pageBuilder);
-        registerLanguageSelectionListener(playerRef, pageBuilder);
-        registerActivationModeSelectionListener(playerRef, pageBuilder);
+        loadInitialValues(playerUuid, pageBuilder);
+        registerPerSlotInputNormalization(pageBuilder);
+        registerPerSlotClearButtons(playerUuid, pageBuilder, playerRef, store);
+        registerSaveAllButton(playerUuid, pageBuilder, playerRef, store);
+        registerShowHudCheckbox(playerUuid, pageBuilder, playerRef, store);
+        registerCloseButton(pageBuilder);
+        registerHudPositionDropdown(pageBuilder, playerRef, store);
+        registerLanguageDropdown(pageBuilder, playerRef);
+        registerActivationModeDropdown(pageBuilder, playerRef);
 
         pageBuilder.open(store);
     }
 
-    private void registerInputListeners(UUID uuid, PageBuilder pageBuilder) {
-        for (Integer slot : SLOTS) {
+    private TemplateProcessor buildTemplate(UUID playerUuid, PlayerRef playerRef) {
+        String hudPosition = PlayerConfig.getHudPosition(playerRef.getUuid().toString()).toString();
+        String language = PlayerConfig.getLanguage(playerUuid.toString());
+        String activationMode = PlayerConfig.getActivationMode(playerUuid.toString()).name();
+
+        return new TemplateProcessor()
+                .setVariable("playerName", playerRef.getUsername())
+                .setVariable("slots", COMMAND_SLOTS)
+                .setVariable("hudPosition", hudPosition)
+                .setVariable("language", language)
+                .setVariable("activationMode", activationMode);
+    }
+
+    private void registerPerSlotInputNormalization(PageBuilder pageBuilder) {
+        for (Integer slotNumber : COMMAND_SLOTS) {
+            String inputId = getSlotInputId(slotNumber);
+
             pageBuilder.addEventListener(
-                    getInputId(slot),
+                    inputId,
                     CustomUIEventBindingType.ValueChanged,
-                    (event, ctx) -> {
-                        String value = ctx.getValue(getInputId(slot))
-                                .map(Object::toString)
-                                .orElse("");
+                    (_, uiContext) -> {
+                        String rawInputValue = readStringValue(uiContext, inputId);
+                        String normalizedCommand = normalizeCommand(rawInputValue);
 
-                        String normalized = normalizeCommand(value);
-
-                        ctx.getById(getInputId(slot), TextFieldBuilder.class)
-                                .ifPresent(tf -> tf.withValue(normalized));
+                        uiContext.getById(inputId, TextFieldBuilder.class)
+                                .ifPresent(textField -> textField.withValue(normalizedCommand));
                     }
             );
         }
     }
 
-    private void registerClearListeners(UUID uuid,
-                                        PageBuilder pageBuilder,
-                                        PlayerRef playerRef,
-                                        Store<EntityStore> store) {
+    private void registerPerSlotClearButtons(
+            UUID playerUuid,
+            PageBuilder pageBuilder,
+            PlayerRef playerRef,
+            Store<EntityStore> store
+    ) {
+        for (Integer slotNumber : COMMAND_SLOTS) {
+            String clearButtonId = getSlotClearButtonId(slotNumber);
+            String inputId = getSlotInputId(slotNumber);
 
-        for (Integer slot : SLOTS) {
             pageBuilder.addEventListener(
-                    getClearButtonId(slot),
+                    clearButtonId,
                     CustomUIEventBindingType.Activating,
-                    (_, ctx) -> {
+                    (_, uiContext) -> {
+                        ShortcutConfig.removeCommand(playerUuid.toString(), slotNumber);
 
-                        ShortcutConfig.removeCommand(uuid.toString(), slot);
+                        uiContext.getById(inputId, TextFieldBuilder.class)
+                                .ifPresent(textField -> textField.withValue(""));
 
-                        ctx.getById(getInputId(slot), TextFieldBuilder.class)
-                                .ifPresent(tf -> tf.withValue(""));
-
-                        ctx.updatePage(true);
+                        uiContext.updatePage(true);
 
                         HUDEvent.onCommandsChanged(playerRef, store);
-                        updateCheckBoxValue(uuid, pageBuilder);
+                        syncShowHudCheckboxWithStore(playerUuid, pageBuilder);
 
                         playerRef.sendMessage(
-                                Message.raw("Removed command from slot " + slot + " successfully!")
+                                Message.raw("Removed command from slot " + slotNumber + " successfully!")
                                         .color(Color.ORANGE)
                         );
                     }
@@ -120,163 +136,210 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         }
     }
 
-    private void registerSaveListener(UUID uuid,
-                                      PageBuilder pageBuilder,
-                                      PlayerRef playerRef,
-                                      Store<EntityStore> store) {
-
+    private void registerSaveAllButton(
+            UUID playerUuid,
+            PageBuilder pageBuilder,
+            PlayerRef playerRef,
+            Store<EntityStore> store
+    ) {
         pageBuilder.addEventListener(
-                "save-all-button",
+                SAVE_ALL_BUTTON_ID,
                 CustomUIEventBindingType.Activating,
-                (_, ctx) -> {
-
+                (_, uiContext) -> {
                     try {
-                        Map<Integer, String> commands = collectAllInputValues(ctx);
-                        persistCommands(uuid, commands);
-                        ctx.updatePage(true);
+                        Map<Integer, String> commandsBySlot = collectAllSlotCommands(uiContext);
+                        persistCommands(playerUuid, commandsBySlot);
+
+                        uiContext.updatePage(true);
 
                         playerRef.sendMessage(
                                 Message.raw("Commands saved successfully!")
                                         .color(Color.GREEN)
                         );
-
                     } catch (Exception e) {
-
                         playerRef.sendMessage(
                                 Message.raw("Error saving commands, try again later!")
                                         .color(Color.RED)
                         );
                     } finally {
                         HUDEvent.onCommandsChanged(playerRef, store);
-                        updateCheckBoxValue(uuid, pageBuilder);
+                        syncShowHudCheckboxWithStore(playerUuid, pageBuilder);
                     }
                 }
         );
     }
 
-    private void registerShowHudCheckboxListener(UUID uuid,
-                                                 PageBuilder pageBuilder,
-                                                 PlayerRef playerRef,
-                                                 Store<EntityStore> store) {
-        HudStore.setIsVisible(uuid, PlayerConfig.isShowHud(uuid.toString()));
-        updateCheckBoxValue(uuid, pageBuilder);
-        pageBuilder.addEventListener(
-                "show-hud-checkbox",
-                CustomUIEventBindingType.ValueChanged,
-                (_, ctx) -> {
-                    boolean checkBoxValue = ctx.getValue("show-hud-checkbox")
-                            .map(Boolean.class::cast)
-                            .orElse(false);
+    private void registerShowHudCheckbox(
+            UUID playerUuid,
+            PageBuilder pageBuilder,
+            PlayerRef playerRef,
+            Store<EntityStore> store
+    ) {
+        HudStore.setIsVisible(playerUuid, PlayerConfig.isShowHud(playerUuid.toString()));
+        syncShowHudCheckboxWithStore(playerUuid, pageBuilder);
 
-                    HUDEvent.setHudVisible(playerRef, store, checkBoxValue);
-                    updateCheckBoxValue(uuid, pageBuilder);
+        pageBuilder.addEventListener(
+                SHOW_HUD_CHECKBOX_ID,
+                CustomUIEventBindingType.ValueChanged,
+                (_, uiContext) -> {
+                    boolean isHudVisible = readBooleanValue(uiContext, SHOW_HUD_CHECKBOX_ID);
+
+                    HUDEvent.setHudVisible(playerRef, store, isHudVisible);
+                    syncShowHudCheckboxWithStore(playerUuid, pageBuilder);
                 }
         );
     }
 
-    private void registerCloseButtonListener(PageBuilder pageBuilder) {
-        pageBuilder.addEventListener("close-button", CustomUIEventBindingType.Activating, (_, ctx) -> {
-            ctx.getPage().ifPresent(HyUIPage::close);
-        });
+    private void registerCloseButton(PageBuilder pageBuilder) {
+        pageBuilder.addEventListener(
+                CLOSE_BUTTON_ID,
+                CustomUIEventBindingType.Activating,
+                (_, uiContext) -> uiContext.getPage().ifPresent(HyUIPage::close)
+        );
     }
 
-    private void registerHudSelectionListener(PlayerRef playerRef, Store<EntityStore> store, PageBuilder pageBuilder) {
-        pageBuilder.addEventListener("hud-position", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
-            var selectedHudPosition = ctx.getValue("hud-position").map(Object::toString)
-                    .orElse("");
+    private void registerHudPositionDropdown(PageBuilder pageBuilder, PlayerRef playerRef, Store<EntityStore> store) {
+        pageBuilder.addEventListener(
+                HUD_POSITION_DROPDOWN_ID,
+                CustomUIEventBindingType.ValueChanged,
+                (_, uiContext) -> {
+                    String selectedHudPosition = readStringValue(uiContext, HUD_POSITION_DROPDOWN_ID);
+                    if (selectedHudPosition.isEmpty()) return;
 
-            var hudPreset = HudPositionPreset.valueOf(selectedHudPosition);
+                    HudPositionPreset hudPreset;
+                    try {
+                        hudPreset = HudPositionPreset.valueOf(selectedHudPosition);
+                    } catch (Exception e) {
+                        return;
+                    }
 
-            HUDEvent.setHudPosition(playerRef, store, hudPreset);
-        });
+                    HUDEvent.setHudPosition(playerRef, store, hudPreset);
+                }
+        );
     }
 
-    private void registerLanguageSelectionListener(PlayerRef playerRef, PageBuilder pageBuilder) {
-        pageBuilder.addEventListener("language", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
-            var selectedLanguage = ctx.getValue("language").map(Object::toString)
-                    .orElse("");
+    private void registerLanguageDropdown(PageBuilder pageBuilder, PlayerRef playerRef) {
+        pageBuilder.addEventListener(
+                LANGUAGE_DROPDOWN_ID,
+                CustomUIEventBindingType.ValueChanged,
+                (_, uiContext) -> {
+                    String selectedLanguage = readStringValue(uiContext, LANGUAGE_DROPDOWN_ID);
+                    if (selectedLanguage.isEmpty()) return;
 
-            PlayerConfig.setLanguage(playerRef.getUuid().toString(), selectedLanguage);
-        });
+                    PlayerConfig.setLanguage(playerRef.getUuid().toString(), selectedLanguage);
+                }
+        );
     }
 
-    private void registerActivationModeSelectionListener(PlayerRef playerRef, PageBuilder pageBuilder) {
-        pageBuilder.addEventListener("activation-mode", CustomUIEventBindingType.ValueChanged, (_, ctx) -> {
-            var value = ctx.getValue("activation-mode").map(Object::toString).orElse("");
-            PlayerConfig.ActivationMode mode;
-            try {
-                mode = PlayerConfig.ActivationMode.valueOf(value);
-            } catch (Exception e) {
-                mode = PlayerConfig.ActivationMode.CTRL_F;
-            }
-            PlayerConfig.setActivationMode(playerRef.getUuid().toString(), mode);
-        });
+    private void registerActivationModeDropdown(PageBuilder pageBuilder, PlayerRef playerRef) {
+        pageBuilder.addEventListener(
+                ACTIVATION_MODE_DROPDOWN_ID,
+                CustomUIEventBindingType.ValueChanged,
+                (_, uiContext) -> {
+                    String selectedModeName = readStringValue(uiContext, ACTIVATION_MODE_DROPDOWN_ID);
+
+                    PlayerConfig.ActivationMode activationMode = parseActivationModeOrDefault(selectedModeName);
+                    PlayerConfig.setActivationMode(playerRef.getUuid().toString(), activationMode);
+                }
+        );
     }
 
-    private Map<Integer, String> collectAllInputValues(Object ctx) {
-        Map<Integer, String> values = new HashMap<>();
+    private PlayerConfig.ActivationMode parseActivationModeOrDefault(String modeName) {
+        if (modeName == null || modeName.isBlank()) return PlayerConfig.ActivationMode.CTRL_F;
 
-        for (Integer slot : SLOTS) {
-            String raw = ((UIContext) ctx)
-                    .getValue(getInputId(slot))
-                    .map(Object::toString)
-                    .orElse("");
+        try {
+            return PlayerConfig.ActivationMode.valueOf(modeName);
+        } catch (Exception e) {
+            return PlayerConfig.ActivationMode.CTRL_F;
+        }
+    }
 
-            values.put(slot, normalizeCommand(raw));
+    private Map<Integer, String> collectAllSlotCommands(UIContext uiContext) {
+        Map<Integer, String> commandsBySlot = new HashMap<>();
+
+        for (Integer slotNumber : COMMAND_SLOTS) {
+            String inputId = getSlotInputId(slotNumber);
+
+            String rawInputValue = readStringValue(uiContext, inputId);
+            String normalizedCommand = normalizeCommand(rawInputValue);
+
+            commandsBySlot.put(slotNumber, normalizedCommand);
         }
 
-        return values;
+        return commandsBySlot;
     }
 
-    private void persistCommands(UUID uuid, Map<Integer, String> commands) {
-        for (Map.Entry<Integer, String> entry : commands.entrySet()) {
-
-            Integer slot = entry.getKey();
+    private void persistCommands(UUID playerUuid, Map<Integer, String> commandsBySlot) {
+        for (Map.Entry<Integer, String> entry : commandsBySlot.entrySet()) {
+            Integer slotNumber = entry.getKey();
             String command = entry.getValue();
 
             if (command.isEmpty()) {
-                ShortcutConfig.removeCommand(uuid.toString(), slot);
+                ShortcutConfig.removeCommand(playerUuid.toString(), slotNumber);
                 continue;
             }
 
-            ShortcutConfig.setCommand(uuid.toString(), slot, command);
+            ShortcutConfig.setCommand(playerUuid.toString(), slotNumber, command);
         }
     }
 
-    private void loadInitialValues(UUID uuid, PageBuilder pageBuilder) {
-        for (Integer slot : SLOTS) {
-            pageBuilder.getById(getInputId(slot), TextFieldBuilder.class)
-                    .ifPresent(tf -> tf.withValue(ShortcutConfig.getCommand(uuid.toString(), slot)));
+    private void loadInitialValues(UUID playerUuid, PageBuilder pageBuilder) {
+        for (Integer slotNumber : COMMAND_SLOTS) {
+            pageBuilder.getById(getSlotInputId(slotNumber), TextFieldBuilder.class)
+                    .ifPresent(textField -> textField.withValue(ShortcutConfig.getCommand(playerUuid.toString(), slotNumber)));
         }
 
-        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class).ifPresent(cb -> cb.withValue(PlayerConfig.isShowHud(uuid.toString())));
-        pageBuilder.getById("hud-position", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getHudPosition(uuid.toString()).toString()));
-        pageBuilder.getById("language", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getLanguage(uuid.toString())));
-        pageBuilder.getById("activation-mode", DropdownBoxBuilder.class).ifPresent(dpd -> dpd.withValue(PlayerConfig.getActivationMode(uuid.toString()).name()));
+        pageBuilder.getById(SHOW_HUD_CHECKBOX_ID, CheckBoxBuilder.class)
+                .ifPresent(checkBox -> checkBox.withValue(PlayerConfig.isShowHud(playerUuid.toString())));
+
+        pageBuilder.getById(HUD_POSITION_DROPDOWN_ID, DropdownBoxBuilder.class)
+                .ifPresent(dropdown -> dropdown.withValue(PlayerConfig.getHudPosition(playerUuid.toString()).toString()));
+
+        pageBuilder.getById(LANGUAGE_DROPDOWN_ID, DropdownBoxBuilder.class)
+                .ifPresent(dropdown -> dropdown.withValue(PlayerConfig.getLanguage(playerUuid.toString())));
+
+        pageBuilder.getById(ACTIVATION_MODE_DROPDOWN_ID, DropdownBoxBuilder.class)
+                .ifPresent(dropdown -> dropdown.withValue(PlayerConfig.getActivationMode(playerUuid.toString()).name()));
     }
 
-    private String normalizeCommand(String input) {
-        if (input == null) return "";
+    private String normalizeCommand(String commandInput) {
+        if (commandInput == null) return "";
 
-        String value = input.trim();
+        String normalized = commandInput.trim();
+        if (normalized.isEmpty()) return "";
 
-        if (value.startsWith("/")) {
-            value = value.substring(1);
+        if (normalized.startsWith("/")) normalized = normalized.substring(1).trim();
+        return normalized;
+    }
+
+    private String readStringValue(UIContext uiContext, String elementId) {
+        return uiContext.getValue(elementId)
+                .map(Object::toString)
+                .orElse("")
+                .trim();
+    }
+
+    private boolean readBooleanValue(UIContext uiContext, String elementId) {
+        Object value = uiContext.getValue(elementId).orElse(false);
+        if (value instanceof Boolean booleanValue) return booleanValue;
+
+        try {
+            return Boolean.parseBoolean(value.toString());
+        } catch (Exception e) {
+            return false;
         }
-
-        return value.trim();
     }
 
-    private String getInputId(int slot) {
-        return "slot-" + slot + "-input";
+    private String getSlotInputId(int slotNumber) {
+        return "slot-" + slotNumber + "-input";
     }
 
-    private String getClearButtonId(int slot) {
-        return "slot-" + slot + "-button-clear";
+    private String getSlotClearButtonId(int slotNumber) {
+        return "slot-" + slotNumber + "-button-clear";
     }
 
-    private void updateCheckBoxValue(UUID uuid, PageBuilder pageBuilder) {
-        pageBuilder.getById("show-hud-checkbox", CheckBoxBuilder.class)
-                .ifPresent(cb -> cb.withValue(HudStore.getIsVisible(uuid)));
+    private void syncShowHudCheckboxWithStore(UUID playerUuid, PageBuilder pageBuilder) {
+        pageBuilder.getById(SHOW_HUD_CHECKBOX_ID, CheckBoxBuilder.class)
+                .ifPresent(checkBox -> checkBox.withValue(HudStore.getIsVisible(playerUuid)));
     }
 }
