@@ -1,5 +1,7 @@
-package br.tblack.plugin;
+package br.tblack.plugin.input;
 
+import br.tblack.plugin.config.PlayerConfig;
+import br.tblack.plugin.config.ShortcutConfig;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;

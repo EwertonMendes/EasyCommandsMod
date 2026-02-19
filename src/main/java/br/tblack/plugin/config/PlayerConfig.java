@@ -1,4 +1,4 @@
-package br.tblack.plugin;
+package br.tblack.plugin.config;
 
 import br.tblack.plugin.enums.HudPositionPreset;
 import com.google.gson.Gson;

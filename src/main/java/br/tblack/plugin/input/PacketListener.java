@@ -1,5 +1,7 @@
-package br.tblack.plugin;
+package br.tblack.plugin.input;
 
+import br.tblack.plugin.config.PlayerConfig;
+import br.tblack.plugin.util.EasyCommandsUtils;
 import com.hypixel.hytale.protocol.InteractionType;
 import com.hypixel.hytale.protocol.Packet;
 import com.hypixel.hytale.protocol.packets.interaction.SyncInteractionChain;

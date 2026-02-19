@@ -1,4 +1,4 @@
-package br.tblack.plugin;
+package br.tblack.plugin.hud;
 
 import au.ellie.hyui.builders.HyUIHud;
 import br.tblack.plugin.enums.HudPositionPreset;

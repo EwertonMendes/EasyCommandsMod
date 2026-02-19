@@ -1,4 +1,4 @@
-package br.tblack.plugin;
+package br.tblack.plugin.input;
 
 import java.util.Map;
 import java.util.UUID;

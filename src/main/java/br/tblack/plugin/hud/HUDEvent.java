@@ -1,8 +1,10 @@
-package br.tblack.plugin;
+package br.tblack.plugin.hud;
 
 import au.ellie.hyui.builders.HyUIHud;
 import au.ellie.hyui.builders.HudBuilder;
 import au.ellie.hyui.html.TemplateProcessor;
+import br.tblack.plugin.config.PlayerConfig;
+import br.tblack.plugin.config.ShortcutConfig;
 import br.tblack.plugin.enums.HudPositionPreset;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;

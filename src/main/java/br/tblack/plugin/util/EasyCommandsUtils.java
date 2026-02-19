@@ -1,4 +1,4 @@
-package br.tblack.plugin;
+package br.tblack.plugin.util;
 
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
