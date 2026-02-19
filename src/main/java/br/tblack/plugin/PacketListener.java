@@ -42,11 +42,12 @@ public final class PacketListener implements PlayerPacketFilter {
 
     private boolean onChat(PlayerRef playerRefApi, UUID uuid, PlayerConfig.ActivationMode mode, Packet packet) {
         if (mode != PlayerConfig.ActivationMode.O_ONLY) return false;
+        if (!(packet instanceof ChatMessage chat)) return false;
 
-        String msg = EasyCommandsUtils.tryReadChatMessage(packet);
+        String msg = chat.message;
         if (msg == null) return false;
 
-        String normalized = EasyCommandsUtils.normalize(msg);
+        String normalized = EasyCommandsUtils.normalizeCommand(msg);
 
         if (PERMITTED_GAMEMODE_COMMANDS.contains(normalized)) {
             long now = System.currentTimeMillis();
