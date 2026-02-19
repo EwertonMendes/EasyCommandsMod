@@ -5,9 +5,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,66 +16,51 @@ public class PlayerConfig {
         O_ONLY
     }
 
-    private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private static final String CONFIG_DIR = "plugins/EasyCommands";
     private static final String CONFIG_FILE = "players-configs.json";
 
-    private static final Type TYPE = new TypeToken<Map<String, PlayerConfigData>>() {}.getType();
+    private static final Type DATA_TYPE = new TypeToken<Map<String, PlayerConfigData>>() {}.getType();
 
-    private static Map<String, PlayerConfigData> perPlayerConfig = new HashMap<>();
+    private static final JsonConfigStore<Map<String, PlayerConfigData>> STORE =
+            new JsonConfigStore<>(GSON, CONFIG_DIR, CONFIG_FILE, DATA_TYPE, HashMap::new);
+
+    private static Map<String, PlayerConfigData> configByPlayerUuid = new HashMap<>();
 
     public static void load() {
-        try {
-            File dir = new File(CONFIG_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
-            File file = new File(dir, CONFIG_FILE);
-            if (!file.exists()) {
-                perPlayerConfig = new HashMap<>();
-                save();
-                return;
-            }
-
-            try (FileReader reader = new FileReader(file)) {
-                Map<String, PlayerConfigData> loaded = gson.fromJson(reader, TYPE);
-                perPlayerConfig = (loaded != null) ? loaded : new HashMap<>();
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            perPlayerConfig = new HashMap<>();
-        }
+        configByPlayerUuid = STORE.loadOrCreate();
+        if (configByPlayerUuid == null) configByPlayerUuid = new HashMap<>();
     }
 
     public static void save() {
-        try {
-            File dir = new File(CONFIG_DIR);
-            if (!dir.exists()) dir.mkdirs();
-
-            File file = new File(dir, CONFIG_FILE);
-            try (FileWriter writer = new FileWriter(file)) {
-                gson.toJson(perPlayerConfig, TYPE, writer);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        STORE.save(configByPlayerUuid);
     }
 
     public static PlayerConfigData getForPlayer(String uuid) {
-        PlayerConfigData cfg = perPlayerConfig.get(uuid);
-        if (cfg == null) {
-            cfg = PlayerConfigData.defaults();
-            perPlayerConfig.put(uuid, cfg);
+        if (uuid == null || uuid.isBlank()) {
+            PlayerConfigData defaults = PlayerConfigData.defaults();
+            defaults.normalize();
+            return defaults;
+        }
+
+        PlayerConfigData playerConfig = configByPlayerUuid.get(uuid);
+        if (playerConfig == null) {
+            playerConfig = PlayerConfigData.defaults();
+            configByPlayerUuid.put(uuid, playerConfig);
             save();
         }
-        cfg.normalize();
-        return cfg;
+
+        playerConfig.normalize();
+        return playerConfig;
     }
 
     public static void setShowHud(String uuid, boolean showHud) {
-        PlayerConfigData cfg = getForPlayer(uuid);
-        cfg.showHud = showHud;
-        perPlayerConfig.put(uuid, cfg);
+        if (uuid == null || uuid.isBlank()) return;
+
+        PlayerConfigData playerConfig = getForPlayer(uuid);
+        playerConfig.showHud = showHud;
+        configByPlayerUuid.put(uuid, playerConfig);
         save();
     }
 
@@ -87,9 +69,11 @@ public class PlayerConfig {
     }
 
     public static void setHudPosition(String uuid, HudPositionPreset preset) {
-        PlayerConfigData cfg = getForPlayer(uuid);
-        cfg.hudPosition = preset;
-        perPlayerConfig.put(uuid, cfg);
+        if (uuid == null || uuid.isBlank()) return;
+
+        PlayerConfigData playerConfig = getForPlayer(uuid);
+        playerConfig.hudPosition = preset;
+        configByPlayerUuid.put(uuid, playerConfig);
         save();
     }
 
@@ -98,9 +82,11 @@ public class PlayerConfig {
     }
 
     public static void setLanguage(String uuid, String language) {
-        PlayerConfigData cfg = getForPlayer(uuid);
-        cfg.language = (language == null) ? null : language.trim();
-        perPlayerConfig.put(uuid, cfg);
+        if (uuid == null || uuid.isBlank()) return;
+
+        PlayerConfigData playerConfig = getForPlayer(uuid);
+        playerConfig.language = (language == null) ? null : language.trim();
+        configByPlayerUuid.put(uuid, playerConfig);
         save();
     }
 
@@ -109,9 +95,11 @@ public class PlayerConfig {
     }
 
     public static void setActivationMode(String uuid, ActivationMode mode) {
-        PlayerConfigData cfg = getForPlayer(uuid);
-        cfg.activationMode = (mode == null) ? ActivationMode.CTRL_F : mode;
-        perPlayerConfig.put(uuid, cfg);
+        if (uuid == null || uuid.isBlank()) return;
+
+        PlayerConfigData playerConfig = getForPlayer(uuid);
+        playerConfig.activationMode = (mode == null) ? ActivationMode.CTRL_F : mode;
+        configByPlayerUuid.put(uuid, playerConfig);
         save();
     }
 
@@ -126,16 +114,16 @@ public class PlayerConfig {
         public ActivationMode activationMode;
 
         public static PlayerConfigData defaults() {
-            PlayerConfigData d = new PlayerConfigData();
-            d.showHud = true;
-            d.hudPosition = HudPositionPreset.TOP_RIGHT;
-            d.language = "en_US";
-            d.activationMode = ActivationMode.CTRL_F;
-            return d;
+            PlayerConfigData defaults = new PlayerConfigData();
+            defaults.showHud = true;
+            defaults.hudPosition = HudPositionPreset.TOP_LEFT;
+            defaults.language = "en_US";
+            defaults.activationMode = ActivationMode.CTRL_F;
+            return defaults;
         }
 
         public void normalize() {
-            if (hudPosition == null) hudPosition = HudPositionPreset.TOP_RIGHT;
+            if (hudPosition == null) hudPosition = HudPositionPreset.TOP_LEFT;
             if (language == null || language.trim().isEmpty()) language = "en_US";
             if (activationMode == null) activationMode = ActivationMode.CTRL_F;
         }
