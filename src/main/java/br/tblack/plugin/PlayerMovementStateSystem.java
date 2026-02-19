@@ -67,12 +67,17 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
             return;
         }
 
+        if (InteractionTracker.isShortcutSuppressed(uuid) || InteractionTracker.isOCooldown(uuid)) {
+            return;
+        }
+
         Boolean alreadyTriggered = InteractionTracker.triggeredShortcut.get(uuid);
         if (alreadyTriggered != null && alreadyTriggered) {
             return;
         }
 
         InteractionTracker.triggeredShortcut.put(uuid, true);
+        InteractionTracker.startOCooldown(uuid);
 
         runSlot(player, commandBuffer, uuid);
 
@@ -84,8 +89,19 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
                              UUID uuid,
                              MovementStates states) {
 
-        if (!states.crouching || !states.idle || !states.horizontalIdle) {
+        if (!states.crouching) {
+            InteractionTracker.ctrlConsumed.remove(uuid);
+            InteractionTracker.lastUsePress.remove(uuid);
             InteractionTracker.triggeredShortcut.remove(uuid);
+            return;
+        }
+
+        if (!states.idle || !states.horizontalIdle) {
+            InteractionTracker.triggeredShortcut.remove(uuid);
+            return;
+        }
+
+        if (Boolean.TRUE.equals(InteractionTracker.ctrlConsumed.get(uuid))) {
             return;
         }
 
@@ -99,6 +115,7 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
         if (now - lastUseTime > InteractionTracker.USE_VALID_MS) return;
 
         InteractionTracker.triggeredShortcut.put(uuid, true);
+        InteractionTracker.ctrlConsumed.put(uuid, true);
 
         runSlot(player, commandBuffer, uuid);
 
