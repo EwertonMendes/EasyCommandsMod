@@ -8,24 +8,32 @@ import java.util.function.Consumer;
 
 public class EasyCommandsUtils {
 
-    public static String normalizeCommand(String s) {
-        String t = s.trim();
-        if (t.startsWith("/")) t = t.substring(1).trim();
-        return t.toLowerCase(Locale.ROOT);
+    public static String normalizeCommand(String rawCommandInput) {
+        if (rawCommandInput == null) return "";
+
+        String normalizedCommand = rawCommandInput.trim();
+        if (normalizedCommand.isEmpty()) return "";
+
+        if (normalizedCommand.startsWith("/")) normalizedCommand = normalizedCommand.substring(1).trim();
+        if (normalizedCommand.isEmpty()) return "";
+
+        return normalizedCommand.toLowerCase(Locale.ROOT);
     }
 
     public static void runOnWorldThread(PlayerRef playerApiRef, Consumer<Player> action) {
-        var ref = playerApiRef.getReference();
-        if (ref == null || !ref.isValid()) return;
+        if (playerApiRef == null || action == null) return;
 
-        var store = ref.getStore();
-        var world = store.getExternalData().getWorld();
+        var playerEntityReference = playerApiRef.getReference();
+        if (playerEntityReference == null || !playerEntityReference.isValid()) return;
+
+        var entityStore = playerEntityReference.getStore();
+        var world = entityStore.getExternalData().getWorld();
 
         world.execute(() -> {
-            Player player = store.getComponent(ref, Player.getComponentType());
-            if (player != null) {
-                action.accept(player);
-            }
+            Player playerEntity = entityStore.getComponent(playerEntityReference, Player.getComponentType());
+            if (playerEntity == null) return;
+
+            action.accept(playerEntity);
         });
     }
 }
