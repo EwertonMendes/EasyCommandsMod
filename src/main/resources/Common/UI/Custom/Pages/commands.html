@@ -55,11 +55,15 @@
             </div>
             <div data-hyui-flexweight="1"></div>
 
-            {{#if state.showHud}}
-            <input type="checkbox" id="show-hud-checkbox" checked />
-            {{else}}
-            <input type="checkbox" id="show-hud-checkbox" />
-            {{/if}}
+            <div style="layout-mode: Middle; anchor-width: 545; anchor-height: 44;">
+              <div style="layout-mode: Right; anchor-width: 545; anchor-height: 44;">
+                {{#if state.showHud}}
+                <input type="checkbox" id="show-hud-checkbox" checked />
+                {{else}}
+                <input type="checkbox" id="show-hud-checkbox" />
+                {{/if}}
+              </div>
+            </div>
           </div>
 
           <div style="anchor-height: 16;"></div>
@@ -91,6 +95,8 @@
               <option value="pt-BR">Português (BR)</option>
             </select>
           </div>
+
+          <div style="anchor-height: 16;"></div>
 
           <div class="row" style="layout-mode: Left; anchor-height: 44;">
             <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">

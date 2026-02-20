@@ -3,6 +3,7 @@ package br.tblack.plugin.command;
 import au.ellie.hyui.builders.CheckBoxBuilder;
 import au.ellie.hyui.builders.HyUIPage;
 import au.ellie.hyui.builders.PageBuilder;
+import au.ellie.hyui.builders.TabNavigationBuilder;
 import au.ellie.hyui.builders.TextFieldBuilder;
 import au.ellie.hyui.events.UIContext;
 import au.ellie.hyui.html.TemplateProcessor;
@@ -45,6 +46,8 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
 
     private static final String SLOTS_CONTENT_ID = "slots-content";
     private static final String CONFIG_CONTENT_ID = "config-content";
+
+    private static final String TABS_NAV_ID = "easy-commands-tabs";
 
     private final Map<String, String> translations = new HashMap<>();
     private final Map<String, Object> uiState = new HashMap<>();
@@ -284,8 +287,8 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
         pageBuilder.addEventListener(
                 LANGUAGE_DROPDOWN_ID,
                 CustomUIEventBindingType.ValueChanged,
-                (_, uiContext) -> {
-                    String selectedLanguage = EasyCommandsUtils.readStringValue(uiContext, LANGUAGE_DROPDOWN_ID);
+                (_, ctx) -> {
+                    String selectedLanguage = EasyCommandsUtils.readStringValue(ctx, LANGUAGE_DROPDOWN_ID);
                     if (selectedLanguage.isEmpty()) return;
 
                     PlayerConfig.setLanguage(playerUuid.toString(), selectedLanguage);
@@ -296,7 +299,33 @@ public class CommandsScreenCommand extends AbstractPlayerCommand {
                     translations.clear();
                     translations.putAll(buildI18n(playerUuid, playerRef));
 
-                    uiContext.updatePage(true);
+                    ctx.getById(TABS_NAV_ID, TabNavigationBuilder.class).ifPresent(nav -> {
+                        TabNavigationBuilder.Tab slotsTab = nav.getTab("slots");
+                        if (slotsTab != null) {
+                            TabNavigationBuilder.Tab updated = new TabNavigationBuilder.Tab(
+                                    slotsTab.id(),
+                                    translations.getOrDefault("slotsStr", slotsTab.label()),
+                                    slotsTab.contentId(),
+                                    slotsTab.selected(),
+                                    slotsTab.buttonBuilder()
+                            );
+                            nav.updateTab("slots", updated);
+                        }
+
+                        TabNavigationBuilder.Tab configTab = nav.getTab("config");
+                        if (configTab != null) {
+                            TabNavigationBuilder.Tab updated = new TabNavigationBuilder.Tab(
+                                    configTab.id(),
+                                    translations.getOrDefault("configStr", configTab.label()),
+                                    configTab.contentId(),
+                                    configTab.selected(),
+                                    configTab.buttonBuilder()
+                            );
+                            nav.updateTab("config", updated);
+                        }
+                    });
+
+                    ctx.updatePage(true);
 
                     HUDEvent.onLanguageChanged(playerRef, store);
                 }
