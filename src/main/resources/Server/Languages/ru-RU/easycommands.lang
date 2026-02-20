@@ -1,0 +1,29 @@
+easycommands.slot = Слот
+easycommands.slots = Слоты
+easycommands.config = Настройки
+
+easycommands.msg.runningCommand = Выполняется команда: /{cmd}
+easycommands.msg.noCommandFoundForSlot = Для слота {slotNumber} команда не задана
+easycommands.msg.commandsSavedSuccessfully = Команды сохранены!
+easycommands.msg.errorSavingCommands = Не удалось сохранить команды. Попробуйте позже!
+easycommands.msg.removedCommand = Команда удалена из слота {slotNumber}
+
+easycommands.hud.title = Мои команды
+easycommands.hud.noCommandMsg1 = Вы ещё не настроили ни одной команды.
+easycommands.hud.noCommandMsg2 = Используйте /cmd, чтобы настроить свои команды!
+
+easycommands.cmdScreen.title = Мои команды
+easycommands.cmdScreen.close = Закрыть
+easycommands.cmdScreen.registeredCommandsFor = Команды игрока {playerName}
+easycommands.cmdScreen.save = Сохранить
+easycommands.cmdScreen.showHud = Показать HUD команд
+easycommands.cmdScreen.hudPosition = Позиция HUD команд
+easycommands.cmdScreen.language = Язык
+easycommands.cmdScreen.activationMode = Режим активации
+
+easycommands.cmdScreen.hudPosition.topLeft = Сверху слева
+easycommands.cmdScreen.hudPosition.topRight = Сверху справа
+easycommands.cmdScreen.hudPosition.centerLeft = По центру слева
+easycommands.cmdScreen.hudPosition.centerRight = По центру справа
+easycommands.cmdScreen.hudPosition.bottomLeft = Снизу слева
+easycommands.cmdScreen.hudPosition.bottomRight = Снизу справа

@@ -1,44 +1,75 @@
 <div class="page-overlay">
-  <button id="close-button"
-          style="anchor-width: 110; anchor-height: 40; layout-mode: Top; anchor-top: 70; anchor-right: 560;"
-          class="secondary-button">
+  <button
+    id="close-button"
+    style="
+      anchor-width: 110;
+      anchor-height: 40;
+      layout-mode: Top;
+      anchor-top: 70;
+      anchor-right: 560;
+    "
+    class="secondary-button"
+  >
     {{$translations.closeStr}}
   </button>
 
-  <div class="decorated-container" data-hyui-title="{{$translations.title}}" style="anchor-height: 850; anchor-width: 800;">
+  <div
+    class="decorated-container"
+    data-hyui-title="{{$translations.title}}"
+    style="anchor-height: 850; anchor-width: 800"
+  >
     <div class="container-contents">
       <input type="hidden" id="currentTab" value="{{$state.currentTab}}" />
-      <nav id="easy-commands-tabs" class="tabs"
-           data-tabs="slots:{{$translations.slotsStr}}:slots-content,config:{{$translations.configStr}}:config-content"
-           data-selected="{{$state.currentTab}}">
-      </nav>
+      <nav
+        id="easy-commands-tabs"
+        class="tabs"
+        data-tabs="slots:{{$translations.slotsStr}}:slots-content,config:{{$translations.configStr}}:config-content"
+        data-selected="{{$state.currentTab}}"
+      ></nav>
 
       <div id="slots-content" class="tab-content" data-hyui-tab-id="slots">
-        <div style="layout-mode: TopScrolling;">
-          <div style="anchor-height: 20;"></div>
+        <div style="layout-mode: TopScrolling">
+          <div style="anchor-height: 20"></div>
           <div class="header">
-            <p class="selection-text">{{$translations.registeredCommandsFor}}</p>
+            <p class="selection-text">
+              {{$translations.registeredCommandsFor}}
+            </p>
           </div>
-          <div style="anchor-height: 20;"></div>
+          <div style="anchor-height: 20"></div>
 
           {{#each slots}}
-          <div class="row" style="layout-mode: Left;">
-            <div style="layout-mode: Middle;">
-              <p style="anchor-width: 60; layout-mode: Middle;">{{$translations.slotStr}} {{$item.slotNumber}}</p>
+          <div class="row" style="layout-mode: Left">
+            <div style="layout-mode: Middle">
+              <p style="anchor-width: 70; layout-mode: Middle">
+                {{$translations.slotStr}} {{$item.slotNumber}}
+              </p>
             </div>
-            <div style="anchor-width: 10;"></div>
-            <input type="text" id="{{$item.inputId}}" value="{{$item.value}}" data-hyui-flexweight="1" />
-            <div style="anchor-width: 10;"></div>
-            <button id="{{$item.clearId}}" style="anchor-width: 50;" class="tertiary-button">X</button>
+            <div style="anchor-width: 10"></div>
+            <input
+              type="text"
+              id="{{$item.inputId}}"
+              value="{{$item.value}}"
+              data-hyui-flexweight="1"
+            />
+            <div style="anchor-width: 10"></div>
+            <button
+              id="{{$item.clearId}}"
+              style="anchor-width: 50"
+              class="tertiary-button"
+            >
+              X
+            </button>
           </div>
 
-          <div style="anchor-height: 30;"></div>
+          <div style="anchor-height: 30"></div>
           {{/each}}
 
-          <div style="layout-mode: Middle;">
-            <button id="save-all-button"
-                    style="anchor-width: 200; anchor-height: 40"
-                    class="primary-button">
+          <div style="layout-mode: Middle">
+            <button
+              id="save-all-button"
+              style="anchor-width: 200; anchor-height: 40"
+              class="primary-button"
+            >
               {{$translations.save}}
             </button>
           </div>
@@ -46,17 +77,23 @@
       </div>
 
       <div id="config-content" class="tab-content" data-hyui-tab-id="config">
-        <div style="layout-mode: TopScrolling;">
-          <div style="anchor-height: 20;"></div>
+        <div style="layout-mode: TopScrolling">
+          <div style="anchor-height: 20"></div>
 
-          <div class="row" style="layout-mode: Left; anchor-height: 44;">
-            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
-              <p style="layout-mode: Middle;">{{$translations.showHudStr}}</p>
+          <div class="row" style="layout-mode: Left; anchor-height: 44">
+            <div
+              style="layout-mode: Middle; anchor-width: 220; anchor-height: 44"
+            >
+              <p style="layout-mode: Middle">{{$translations.showHudStr}}</p>
             </div>
             <div data-hyui-flexweight="1"></div>
 
-            <div style="layout-mode: Middle; anchor-width: 545; anchor-height: 44;">
-              <div style="layout-mode: Right; anchor-width: 545; anchor-height: 44;">
+            <div
+              style="layout-mode: Middle; anchor-width: 545; anchor-height: 44"
+            >
+              <div
+                style="layout-mode: Right; anchor-width: 545; anchor-height: 44"
+              >
                 {{#if state.showHud}}
                 <input type="checkbox" id="show-hud-checkbox" checked />
                 {{else}}
@@ -66,41 +103,65 @@
             </div>
           </div>
 
-          <div style="anchor-height: 16;"></div>
+          <div style="anchor-height: 16"></div>
 
-          <div class="row" style="layout-mode: Left; anchor-height: 44;">
-            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
-              <p style="layout-mode: Middle;">{{$translations.hudPositionStr}}</p>
+          <div class="row" style="layout-mode: Left; anchor-height: 44">
+            <div
+              style="layout-mode: Middle; anchor-width: 300; anchor-height: 44"
+            >
+              <p style="layout-mode: Middle">
+                {{$translations.hudPositionStr}}
+              </p>
             </div>
             <div data-hyui-flexweight="1"></div>
             <select id="hud-position" value="{{$state.hudPosition}}">
               <option value="TOP_LEFT">{{$translations.topLeftStr}}</option>
               <option value="TOP_RIGHT">{{$translations.topRightStr}}</option>
-              <option value="CENTER_LEFT">{{$translations.centerLeftStr}}</option>
-              <option value="CENTER_RIGHT">{{$translations.centerRightStr}}</option>
-              <option value="BOTTOM_LEFT">{{$translations.bottomLeftStr}}</option>
-              <option value="BOTTOM_RIGHT">{{$translations.bottomRightStr}}</option>
+              <option value="CENTER_LEFT">
+                {{$translations.centerLeftStr}}
+              </option>
+              <option value="CENTER_RIGHT">
+                {{$translations.centerRightStr}}
+              </option>
+              <option value="BOTTOM_LEFT">
+                {{$translations.bottomLeftStr}}
+              </option>
+              <option value="BOTTOM_RIGHT">
+                {{$translations.bottomRightStr}}
+              </option>
             </select>
           </div>
 
-          <div style="anchor-height: 16;"></div>
+          <div style="anchor-height: 16"></div>
 
-          <div class="row" style="layout-mode: Left; anchor-height: 44;">
-            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
-              <p style="layout-mode: Middle;">{{$translations.languageStr}}</p>
+          <div class="row" style="layout-mode: Left; anchor-height: 44">
+            <div
+              style="layout-mode: Middle; anchor-width: 220; anchor-height: 44"
+            >
+              <p style="layout-mode: Middle">{{$translations.languageStr}}</p>
             </div>
             <div data-hyui-flexweight="1"></div>
             <select id="language" value="{{$state.language}}">
               <option value="en-US">English (US)</option>
               <option value="pt-BR">Português (BR)</option>
+              <option value="pt-PT">Português (PT)</option>
+              <option value="es-ES">Español</option>
+              <option value="fr-FR">Français</option>
+              <option value="de-DE">Deutsch</option>
+              <option value="it-IT">Italiano</option>
+              <option value="ru-RU">Русский</option>
             </select>
           </div>
 
-          <div style="anchor-height: 16;"></div>
+          <div style="anchor-height: 16"></div>
 
-          <div class="row" style="layout-mode: Left; anchor-height: 44;">
-            <div style="layout-mode: Middle; anchor-width: 220; anchor-height: 44;">
-              <p style="layout-mode: Middle;">{{$translations.activationModeStr}}</p>
+          <div class="row" style="layout-mode: Left; anchor-height: 44">
+            <div
+              style="layout-mode: Middle; anchor-width: 220; anchor-height: 44"
+            >
+              <p style="layout-mode: Middle">
+                {{$translations.activationModeStr}}
+              </p>
             </div>
             <div data-hyui-flexweight="1"></div>
             <select id="activation-mode" value="{{$state.activationMode}}">
@@ -109,7 +170,7 @@
             </select>
           </div>
 
-          <div style="anchor-height: 20;"></div>
+          <div style="anchor-height: 20"></div>
         </div>
       </div>
     </div>

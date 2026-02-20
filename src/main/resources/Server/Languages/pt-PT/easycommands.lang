@@ -1,23 +1,23 @@
 easycommands.slot = Slot
 easycommands.slots = Slots
-easycommands.config = Configurações
+easycommands.config = Definições
 
-easycommands.msg.runningCommand = Executando comando /{cmd}
-easycommands.msg.noCommandFoundForSlot = Nenhum comando configurado para o slot {slotNumber}
-easycommands.msg.commandsSavedSuccessfully = Comandos salvos com sucesso!
-easycommands.msg.errorSavingCommands = Erro ao salvar os comandos. Tente novamente mais tarde!
+easycommands.msg.runningCommand = A executar comando: /{cmd}
+easycommands.msg.noCommandFoundForSlot = Nenhum comando definido para o slot {slotNumber}
+easycommands.msg.commandsSavedSuccessfully = Comandos guardados!
+easycommands.msg.errorSavingCommands = Não foi possível guardar os comandos. Tenta novamente mais tarde!
 easycommands.msg.removedCommand = Comando removido do slot {slotNumber}
 
-easycommands.hud.title = Meus comandos
-easycommands.hud.noCommandMsg1 = Você ainda não registrou nenhum comando.
-easycommands.hud.noCommandMsg2 = Use /cmd para configurar seus comandos!
+easycommands.hud.title = Os meus comandos
+easycommands.hud.noCommandMsg1 = Ainda não configuraste nenhum comando.
+easycommands.hud.noCommandMsg2 = Usa /cmd para configurares os teus comandos!
 
-easycommands.cmdScreen.title = Meus comandos
+easycommands.cmdScreen.title = Os meus comandos
 easycommands.cmdScreen.close = Fechar
 easycommands.cmdScreen.registeredCommandsFor = Comandos de {playerName}
-easycommands.cmdScreen.save = Salvar
+easycommands.cmdScreen.save = Guardar
 easycommands.cmdScreen.showHud = Mostrar HUD de comandos
-easycommands.cmdScreen.hudPosition = Posição da HUD de comandos
+easycommands.cmdScreen.hudPosition = Posição do HUD de comandos
 easycommands.cmdScreen.language = Idioma
 easycommands.cmdScreen.activationMode = Modo de ativação
 

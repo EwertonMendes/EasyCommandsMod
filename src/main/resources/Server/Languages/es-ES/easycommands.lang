@@ -1,0 +1,29 @@
+easycommands.slot = Ranura
+easycommands.slots = Ranuras
+easycommands.config = Ajustes
+
+easycommands.msg.runningCommand = Ejecutando comando: /{cmd}
+easycommands.msg.noCommandFoundForSlot = No hay ningún comando configurado para la ranura {slotNumber}
+easycommands.msg.commandsSavedSuccessfully = ¡Comandos guardados!
+easycommands.msg.errorSavingCommands = No se pudieron guardar los comandos. ¡Inténtalo de nuevo más tarde!
+easycommands.msg.removedCommand = Comando eliminado de la ranura {slotNumber}
+
+easycommands.hud.title = Mis comandos
+easycommands.hud.noCommandMsg1 = Aún no has configurado ningún comando.
+easycommands.hud.noCommandMsg2 = ¡Usa /cmd para configurar tus comandos!
+
+easycommands.cmdScreen.title = Mis comandos
+easycommands.cmdScreen.close = Cerrar
+easycommands.cmdScreen.registeredCommandsFor = Comandos de {playerName}
+easycommands.cmdScreen.save = Guardar
+easycommands.cmdScreen.showHud = Mostrar HUD de comandos
+easycommands.cmdScreen.hudPosition = Posición del HUD de comandos
+easycommands.cmdScreen.language = Idioma
+easycommands.cmdScreen.activationMode = Modo de activación
+
+easycommands.cmdScreen.hudPosition.topLeft = Arriba a la izquierda
+easycommands.cmdScreen.hudPosition.topRight = Arriba a la derecha
+easycommands.cmdScreen.hudPosition.centerLeft = Centro a la izquierda
+easycommands.cmdScreen.hudPosition.centerRight = Centro a la derecha
+easycommands.cmdScreen.hudPosition.bottomLeft = Abajo a la izquierda
+easycommands.cmdScreen.hudPosition.bottomRight = Abajo a la derecha

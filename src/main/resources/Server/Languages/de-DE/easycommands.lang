@@ -1,0 +1,29 @@
+easycommands.slot = Slot
+easycommands.slots = Slots
+easycommands.config = Einstellungen
+
+easycommands.msg.runningCommand = Befehl wird ausgeführt: /{cmd}
+easycommands.msg.noCommandFoundForSlot = Für Slot {slotNumber} ist kein Befehl festgelegt
+easycommands.msg.commandsSavedSuccessfully = Befehle gespeichert!
+easycommands.msg.errorSavingCommands = Befehle konnten nicht gespeichert werden. Bitte später erneut versuchen!
+easycommands.msg.removedCommand = Befehl aus Slot {slotNumber} entfernt
+
+easycommands.hud.title = Meine Befehle
+easycommands.hud.noCommandMsg1 = Du hast noch keine Befehle eingerichtet.
+easycommands.hud.noCommandMsg2 = Verwende /cmd, um deine Befehle einzurichten!
+
+easycommands.cmdScreen.title = Meine Befehle
+easycommands.cmdScreen.close = Schließen
+easycommands.cmdScreen.registeredCommandsFor = Befehle von {playerName}
+easycommands.cmdScreen.save = Speichern
+easycommands.cmdScreen.showHud = Befehls-HUD anzeigen
+easycommands.cmdScreen.hudPosition = Position des Befehls-HUD
+easycommands.cmdScreen.language = Sprache
+easycommands.cmdScreen.activationMode = Aktivierungsmodus
+
+easycommands.cmdScreen.hudPosition.topLeft = Oben links
+easycommands.cmdScreen.hudPosition.topRight = Oben rechts
+easycommands.cmdScreen.hudPosition.centerLeft = Mitte links
+easycommands.cmdScreen.hudPosition.centerRight = Mitte rechts
+easycommands.cmdScreen.hudPosition.bottomLeft = Unten links
+easycommands.cmdScreen.hudPosition.bottomRight = Unten rechts

@@ -1,0 +1,29 @@
+easycommands.slot = Slot
+easycommands.slots = Slot
+easycommands.config = Impostazioni
+
+easycommands.msg.runningCommand = Esecuzione comando: /{cmd}
+easycommands.msg.noCommandFoundForSlot = Nessun comando impostato per lo slot {slotNumber}
+easycommands.msg.commandsSavedSuccessfully = Comandi salvati!
+easycommands.msg.errorSavingCommands = Impossibile salvare i comandi. Riprova più tardi!
+easycommands.msg.removedCommand = Comando rimosso dallo slot {slotNumber}
+
+easycommands.hud.title = I miei comandi
+easycommands.hud.noCommandMsg1 = Non hai ancora configurato nessun comando.
+easycommands.hud.noCommandMsg2 = Usa /cmd per configurare i tuoi comandi!
+
+easycommands.cmdScreen.title = I miei comandi
+easycommands.cmdScreen.close = Chiudi
+easycommands.cmdScreen.registeredCommandsFor = Comandi di {playerName}
+easycommands.cmdScreen.save = Salva
+easycommands.cmdScreen.showHud = Mostra HUD comandi
+easycommands.cmdScreen.hudPosition = Posizione HUD comandi
+easycommands.cmdScreen.language = Lingua
+easycommands.cmdScreen.activationMode = Modalità di attivazione
+
+easycommands.cmdScreen.hudPosition.topLeft = In alto a sinistra
+easycommands.cmdScreen.hudPosition.topRight = In alto a destra
+easycommands.cmdScreen.hudPosition.centerLeft = Al centro a sinistra
+easycommands.cmdScreen.hudPosition.centerRight = Al centro a destra
+easycommands.cmdScreen.hudPosition.bottomLeft = In basso a sinistra
+easycommands.cmdScreen.hudPosition.bottomRight = In basso a destra

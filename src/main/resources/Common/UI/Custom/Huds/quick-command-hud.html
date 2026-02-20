@@ -2,7 +2,7 @@
     <div style="layout-mode: left;">
         <div style="anchor-left: 1; layout-mode: top;">
             {{#each playerCommands}}
-            <p id="{{$slot}}">Slot {{$slot}} -> /{{$command}}</p>
+            <p id="{{$slot}}">{{$slot}} -> /{{$command}}</p>
             {{/each}}
             {{#if !playerCommands}}
             <p style="white-space: wrap;">{{$noCommandMsg1}}</p>
