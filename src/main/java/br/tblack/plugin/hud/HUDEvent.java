@@ -6,6 +6,7 @@ import au.ellie.hyui.html.TemplateProcessor;
 import br.tblack.plugin.config.PlayerConfig;
 import br.tblack.plugin.config.ShortcutConfig;
 import br.tblack.plugin.enums.HudPositionPreset;
+import br.tblack.plugin.i18n.Translations;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
@@ -64,6 +65,18 @@ public class HUDEvent {
         handleHudInvalidation(player, store);
     }
 
+    public static void onLanguageChanged(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+
+        if (!HudStore.getIsVisible(uuid)) {
+            HudStore.markDirty(uuid);
+            return;
+        }
+
+        rebuildHud(player, store);
+        HudStore.clearDirty(uuid);
+    }
+
     private static void handleHudInvalidation(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
 
@@ -101,6 +114,9 @@ public class HUDEvent {
         String hudStyle = HudStore.getPosition(uuid).getStyle();
 
         TemplateProcessor template = new TemplateProcessor()
+                .setVariable("title", Translations.msg(uuid, "easycommands.hud.title").getRawText())
+                .setVariable("noCommandMsg1", Translations.msg(uuid, "easycommands.hud.noCommandMsg1").getRawText())
+                .setVariable("noCommandMsg2", Translations.msg(uuid, "easycommands.hud.noCommandMsg2").getRawText())
                 .setVariable("playerCommands", getCommandsList(player))
                 .setVariable("hudStyle", hudStyle);
 

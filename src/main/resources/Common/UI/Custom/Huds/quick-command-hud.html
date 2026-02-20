@@ -1,12 +1,12 @@
-<div class="container" data-hyui-title="My Quick Commands" style="{{$hudStyle}}">
+<div class="container" data-hyui-title="{{$title}}" style="{{$hudStyle}}">
     <div style="layout-mode: left;">
         <div style="anchor-left: 1; layout-mode: top;">
             {{#each playerCommands}}
             <p id="{{$slot}}">Slot {{$slot}} -> /{{$command}}</p>
             {{/each}}
             {{#if !playerCommands}}
-            <p style="white-space: wrap;">You haven't registered any commands yet.</p>
-            <p style="white-space: wrap;">Use /cmd to start setting up your shortcuts!</p>
+            <p style="white-space: wrap;">{{$noCommandMsg1}}</p>
+            <p style="white-space: wrap;">{{$noCommandMsg2}}</p>
             {{/if}}
         </div>
     </div>

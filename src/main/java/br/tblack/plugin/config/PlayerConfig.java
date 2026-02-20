@@ -117,14 +117,14 @@ public class PlayerConfig {
             PlayerConfigData defaults = new PlayerConfigData();
             defaults.showHud = true;
             defaults.hudPosition = HudPositionPreset.TOP_LEFT;
-            defaults.language = "en_US";
+            defaults.language = "en-US";
             defaults.activationMode = ActivationMode.CTRL_F;
             return defaults;
         }
 
         public void normalize() {
             if (hudPosition == null) hudPosition = HudPositionPreset.TOP_LEFT;
-            if (language == null || language.trim().isEmpty()) language = "en_US";
+            if (language == null || language.trim().isEmpty()) language = "en-US";
             if (activationMode == null) activationMode = ActivationMode.CTRL_F;
         }
     }

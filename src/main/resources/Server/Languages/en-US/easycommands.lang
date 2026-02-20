@@ -1,0 +1,29 @@
+easycommands.slot = Slot
+easycommands.slots = Slots
+easycommands.config = Settings
+
+easycommands.msg.runningCommand = Running Command /{cmd}
+easycommands.msg.noCommandFoundForSlot = No configured command for slot {slotNumber}
+easycommands.msg.commandsSavedSuccessfully = Commands saved successfully!
+easycommands.msg.errorSavingCommands = Error saving commands, try again later!
+easycommands.msg.removedCommand = Removed command from slot {slotNumber}
+
+easycommands.hud.title = My quick commands
+easycommands.hud.noCommandMsg1 = You haven't registered any commands yet.
+easycommands.hud.noCommandMsg2 = Use /cmd to start setting up your shortcuts!
+
+easycommands.cmdScreen.title = My Commands
+easycommands.cmdScreen.close = Close
+easycommands.cmdScreen.registeredCommandsFor = Registered commands for {playerName}
+easycommands.cmdScreen.save = Save
+easycommands.cmdScreen.showHud = Show Commands HUD
+easycommands.cmdScreen.hudPosition = Commands HUD Position
+easycommands.cmdScreen.language = Language
+easycommands.cmdScreen.activationMode = Activation Mode
+
+easycommands.cmdScreen.hudPosition.topLeft = Top Left
+easycommands.cmdScreen.hudPosition.topRight = Top Right
+easycommands.cmdScreen.hudPosition.centerLeft = Center Left
+easycommands.cmdScreen.hudPosition.centerRight = Center Right
+easycommands.cmdScreen.hudPosition.bottomLeft = Bottom Left
+easycommands.cmdScreen.hudPosition.bottomRight = Bottom Right

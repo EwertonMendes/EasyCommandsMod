@@ -2,6 +2,7 @@ package br.tblack.plugin.input;
 
 import br.tblack.plugin.config.PlayerConfig;
 import br.tblack.plugin.config.ShortcutConfig;
+import br.tblack.plugin.i18n.Translations;
 import com.hypixel.hytale.component.ArchetypeChunk;
 import com.hypixel.hytale.component.CommandBuffer;
 import com.hypixel.hytale.component.Store;
@@ -137,7 +138,7 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
 
         if (cmd != null && !cmd.isEmpty()) {
             player.sendMessage(
-                    Message.raw("Running Command /" + cmd).color(Color.GREEN)
+                    Translations.msgSuccess(uuid, "easycommands.msg.runningCommand", "cmd", cmd)
             );
 
             commandBuffer.run((_) ->
@@ -145,7 +146,7 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
             );
         } else {
             player.sendMessage(
-                    Message.raw("No configured command for slot " + slotNumber)
+                    Translations.msgWarning(uuid, "easycommands.msg.noCommandFoundForSlot", "slotNumber", slotNumber)
             );
         }
     }
