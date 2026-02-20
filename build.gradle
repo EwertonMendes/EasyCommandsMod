@@ -47,7 +47,7 @@ configurations {
 
 dependencies {
     compileOnly files(serverJarPath)
-    shade files("libs/HyUI-0.8.7-all.jar")
+    shade files("libs/HyUI-0.8.8-2026-02-18.jar")
     compileOnly 'org.checkerframework:checker-qual:3.42.0'
 }
 
