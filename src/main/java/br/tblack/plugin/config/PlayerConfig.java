@@ -18,7 +18,7 @@ public class PlayerConfig {
 
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private static final String CONFIG_DIR = "plugins/EasyCommands";
+    private static final String CONFIG_DIR = "mods/EasyCommands";
     private static final String CONFIG_FILE = "players-configs.json";
 
     private static final Type DATA_TYPE = new TypeToken<Map<String, PlayerConfigData>>() {}.getType();
