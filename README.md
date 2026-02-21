@@ -9,7 +9,6 @@ An intuitive in-game UI lets players assign commands to numbered slots, preview 
 **📦 Project**: EasyCommandsPlugin
 - **Group:** Tblack
 - **Name:** EasyCommandsPlugin
-- **Version:** 0.1.0
 - **Main class:** br.tblack.plugin.CommandsScreenPlugin
 - **Description:** Run any command you want with simple keyboard shortcuts.
 - **Author:** Ewerton "Tblack" Mendes
@@ -48,7 +47,7 @@ Tip: Keep sensitive or admin-only commands protected via your server permission 
 ---
 
 **⚙️ Configuration & Data**
-- Shortcuts are stored per-player in `plugins/Shortcuts/shortcuts.json`.
+- Shortcuts are stored per-player in `mods/EasyCommands/shortcuts.json`.
 
 Example structure:
 
@@ -63,7 +62,7 @@ Example structure:
 ```
 
 - The `ShortcutConfig` class in source handles loading and saving using Gson (pretty-printed).
-- To bulk-install shortcuts, edit `plugins/Shortcuts/shortcuts.json` while the server is stopped, then start the server.
+- To bulk-install shortcuts, edit `mods/EasyCommands/shortcuts.json` while the server is stopped, then start the server.
 
 ---
 
@@ -110,8 +109,8 @@ After a successful build, the plugin JAR is located in `build/libs/`. Drop it in
 ---
 
 **📜 Changelog**
-- 0.1.0 — Initial release: UI for configuring per-player shortcuts; HUD display; per-player JSON storage.
-
+- **1.0.0 (Feb 20, 2026)** — Finalized and polished release: added multi-language support + language selector, HUD position presets, new **“O”** activation mode (⚠️ note: when enabled, manually typing `/gm c` or `/gm a` in chat will also trigger the slot commands), improved shortcut cooldown behavior, fixed an occasional “auto-run” command bug, updated HyUI and server compatibility, and improved config storage with a migration helper for older installs.
+- **0.1.0** — Initial release: UI for configuring per-player shortcuts; HUD display; per-player JSON storage.
 ---
 
 **✉️ Credits & Contact**
