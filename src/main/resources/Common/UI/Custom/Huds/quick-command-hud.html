@@ -1,13 +1,45 @@
-<div class="container" data-hyui-title="{{$title}}" style="{{$hudStyle}}">
-    <div style="layout-mode: left;">
-        <div style="anchor-left: 1; layout-mode: top;">
-            {{#each playerCommands}}
-            <p id="{{$slot}}">{{$slot}} -> /{{$command}}</p>
-            {{/each}}
-            {{#if !playerCommands}}
-            <p style="white-space: wrap;">{{$noCommandMsg1}}</p>
-            <p style="white-space: wrap;">{{$noCommandMsg2}}</p>
-            {{/if}}
-        </div>
+<div class="decorated-container" data-hyui-title="{{$title}}" style="{{$hudStyle}}">
+
+  <div class="container-contents" style="padding: 10; layout-mode: top;">
+
+    {{#each playerCommands}}
+    <div style="
+      layout-mode: left;
+      align-items: center;
+      padding: 6 8;
+      margin-bottom: 4;
+      background-color: rgba(40, 120, 180, 0.14) 2;
+    ">
+
+      <div style="
+        anchor-width: 26;
+        padding: 1 5;
+        background-color: rgba(0, 220, 255, 0.70) 2;
+      ">
+        <p style="
+          text-align: center;
+          font-weight: bold;
+          text-outline-color: #000000;
+          white-space: nowrap;
+        ">{{$slot}}</p>
+      </div>
+
+      <p style="
+        margin-left: 10;
+        flex-weight: 1;
+        text-outline-color: #000000;
+        white-space: nowrap;
+      ">/{{$command}}</p>
+
     </div>
+    {{/each}}
+
+    {{#if !playerCommands}}
+    <div style="layout-mode: top; padding: 4 2;">
+      <p style="white-space: wrap; text-outline-color: #000000;">{{$noCommandMsg1}}</p>
+      <p style="white-space: wrap; margin-top: 4; text-outline-color: #000000;">{{$noCommandMsg2}}</p>
+    </div>
+    {{/if}}
+
+  </div>
 </div>
