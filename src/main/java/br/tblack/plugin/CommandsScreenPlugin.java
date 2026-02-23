@@ -8,6 +8,7 @@ import br.tblack.plugin.input.PacketListener;
 import br.tblack.plugin.input.PlayerMovementStateSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.io.adapter.PacketAdapters;
 import com.hypixel.hytale.server.core.io.adapter.PacketFilter;
@@ -33,6 +34,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
 
         getCommandRegistry().registerCommand(new CommandsScreenCommand());
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);
+        this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, HUDEvent::onPlayerDisconnect);
 
         ShortcutConfig.load();
         PlayerConfig.load();

@@ -25,9 +25,20 @@ public class HudStore {
 
     public static void removeHud(UUID uuid) {
         HyUIHud hud = huds.remove(uuid);
-        if (hud != null) {
+        if (hud == null) return;
+
+        try {
             hud.remove();
+        } catch (Exception ignored) {
         }
+    }
+
+    public static void clearPlayer(UUID uuid) {
+        removeHud(uuid);
+        visibility.remove(uuid);
+        dirty.remove(uuid);
+        position.remove(uuid);
+        highlightedSlot.remove(uuid);
     }
 
     public static void setIsVisible(UUID uuid, boolean isVisible) {

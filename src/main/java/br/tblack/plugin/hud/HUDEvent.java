@@ -9,6 +9,7 @@ import br.tblack.plugin.enums.HudPositionPreset;
 import br.tblack.plugin.i18n.Translations;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -37,24 +38,43 @@ public class HUDEvent {
     private static final int SLOT_SIZE_NORMAL = 14;
     private static final int SLOT_SIZE_ACTIVE = 18;
 
+    private static final long HUD_REFRESH_RATE_MS = 80;
+
     public static void onPlayerReady(PlayerReadyEvent event) {
-        PlayerContext ctx = resolvePlayer(event);
+        PlayerContext ctx = resolvePlayerConnect(event);
         if (ctx == null) return;
 
         UUID uuid = ctx.player.getUuid();
         var settings = PlayerConfig.getForPlayer(uuid.toString());
 
+        HudStore.clearPlayer(uuid);
         HudStore.setIsVisible(uuid, settings.showHud);
         HudStore.setPosition(uuid, settings.hudPosition);
-        HudStore.clearDirty(uuid);
+        HudStore.setHighlightedSlot(uuid, -1);
+        HudStore.markDirty(uuid);
 
-        if (settings.showHud) {
-            rebuildHud(ctx.player, ctx.store);
-        }
+        if (!settings.showHud) return;
+
+        ensureHudExists(ctx.player);
+        applyUpdateNowIfDirty(ctx.player);
+    }
+
+    public static void onPlayerDisconnect(PlayerDisconnectEvent event) {
+        PlayerContext ctx = resolvePlayerDisconnect(event);
+        if (ctx == null) return;
+
+        HudStore.clearPlayer(ctx.player.getUuid());
     }
 
     public static void onCommandsChanged(PlayerRef player, Store<EntityStore> store) {
-        handleHudInvalidation(player, store);
+        UUID uuid = player.getUuid();
+
+        HudStore.markDirty(uuid);
+
+        if (!HudStore.getIsVisible(uuid)) return;
+
+        ensureHudExists(player);
+        applyUpdateNowIfDirty(player);
     }
 
     public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
@@ -63,14 +83,21 @@ public class HUDEvent {
         HudStore.setIsVisible(uuid, visible);
         PlayerConfig.setShowHud(uuid.toString(), visible);
 
+        HyUIHud hud = HudStore.getHud(uuid);
+
         if (!visible) {
-            HyUIHud hud = HudStore.getHud(uuid);
             if (hud != null) hud.hide();
             HudStore.markDirty(uuid);
             return;
         }
 
-        showHudEnsuringFresh(player, store);
+        ensureHudExists(player);
+
+        hud = HudStore.getHud(uuid);
+        if (hud != null) hud.unhide();
+
+        HudStore.markDirty(uuid);
+        applyUpdateNowIfDirty(player);
     }
 
     public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
@@ -79,53 +106,49 @@ public class HUDEvent {
         HudStore.setPosition(uuid, preset);
         PlayerConfig.setHudPosition(uuid.toString(), preset);
 
-        handleHudInvalidation(player, store);
+        HudStore.markDirty(uuid);
+
+        if (!HudStore.getIsVisible(uuid)) return;
+
+        ensureHudExists(player);
+        applyUpdateNowIfDirty(player);
     }
 
     public static void onLanguageChanged(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
 
-        if (!HudStore.getIsVisible(uuid)) {
-            HudStore.markDirty(uuid);
-            return;
-        }
+        HudStore.markDirty(uuid);
 
-        rebuildHud(player, store);
+        if (!HudStore.getIsVisible(uuid)) return;
+
+        ensureHudExists(player);
+        applyUpdateNowIfDirty(player);
+    }
+
+    private static void ensureHudExists(PlayerRef player) {
+        UUID uuid = player.getUuid();
+
+        HyUIHud existing = HudStore.getHud(uuid);
+        if (existing != null) return;
+
+        HyUIHud created = buildHud(player).show();
+        HudStore.setHud(uuid, created);
         HudStore.clearDirty(uuid);
     }
 
-    private static void handleHudInvalidation(PlayerRef player, Store<EntityStore> store) {
+    private static void applyUpdateNowIfDirty(PlayerRef player) {
         UUID uuid = player.getUuid();
 
-        if (!HudStore.getIsVisible(uuid)) {
-            HudStore.markDirty(uuid);
-            return;
-        }
+        if (!HudStore.isDirty(uuid)) return;
 
-        rebuildHud(player, store);
-    }
-
-    private static void showHudEnsuringFresh(PlayerRef player, Store<EntityStore> store) {
-        UUID uuid = player.getUuid();
         HyUIHud hud = HudStore.getHud(uuid);
+        if (hud == null) return;
 
-        if (hud == null || HudStore.isDirty(uuid)) {
-            rebuildHud(player, store);
-            HudStore.clearDirty(uuid);
-            return;
-        }
-
-        hud.unhide();
+        buildHud(player).updateExisting(hud);
+        HudStore.clearDirty(uuid);
     }
 
-    private static void rebuildHud(PlayerRef player, Store<EntityStore> store) {
-        UUID uuid = player.getUuid();
-        HudStore.removeHud(uuid);
-        HyUIHud hud = buildHud(player, store);
-        HudStore.setHud(uuid, hud);
-    }
-
-    private static HyUIHud buildHud(PlayerRef player, Store<EntityStore> store) {
+    private static HudBuilder buildHud(PlayerRef player) {
         UUID uuid = player.getUuid();
 
         String hudStyle = HudStore.getPosition(uuid).getStyle();
@@ -138,8 +161,15 @@ public class HUDEvent {
                 .setVariable("hudStyle", hudStyle);
 
         return HudBuilder.hudForPlayer(player)
-                .loadHtml("Huds/quick-command-hud.html", template)
-                .show(store);
+                .withRefreshRate(HUD_REFRESH_RATE_MS)
+                .onRefresh(h -> {
+                    UUID u = player.getUuid();
+                    if (!HudStore.getIsVisible(u)) return;
+                    if (!HudStore.isDirty(u)) return;
+                    buildHud(player).updateExisting(h);
+                    HudStore.clearDirty(u);
+                })
+                .loadHtml("Huds/quick-command-hud.html", template);
     }
 
     private static List<Map<String, Object>> getCommandsList(UUID uuid) {
@@ -156,7 +186,6 @@ public class HUDEvent {
                     boolean isDim = hasHighlight && slot != highlighted;
 
                     String rowBg = isActive ? ROW_BG_ACTIVE : (isDim ? ROW_BG_DIM : ROW_BG_NORMAL);
-
                     String slotBg = isActive ? SLOT_BG_ACTIVE : SLOT_BG_INACTIVE;
 
                     String cmdTextColor = isActive ? TEXT_ACTIVE : (isDim ? TEXT_DIM : TEXT_NORMAL);
@@ -170,14 +199,11 @@ public class HUDEvent {
                     Map<String, Object> m = new HashMap<>();
                     m.put("slot", slot);
                     m.put("command", entry.getValue());
-
                     m.put("rowBg", rowBg);
                     m.put("slotBg", slotBg);
-
                     m.put("cmdFontSize", cmdSize);
                     m.put("cmdFontWeight", cmdWeight);
                     m.put("slotFontSize", slotSize);
-
                     m.put("cmdTextColor", cmdTextColor);
                     m.put("slotTextColor", slotTextColor);
 
@@ -186,8 +212,16 @@ public class HUDEvent {
                 .toList();
     }
 
-    private static PlayerContext resolvePlayer(PlayerReadyEvent event) {
+    private static PlayerContext resolvePlayerConnect(PlayerReadyEvent event) {
         Ref<EntityStore> ref = event.getPlayerRef();
+        Store<EntityStore> store = ref.getStore();
+        PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
+        if (player == null) return null;
+        return new PlayerContext(player, store);
+    }
+
+    private static PlayerContext resolvePlayerDisconnect(PlayerDisconnectEvent event) {
+        Ref<EntityStore> ref = event.getPlayerRef().getReference();
         Store<EntityStore> store = ref.getStore();
         PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
         if (player == null) return null;
