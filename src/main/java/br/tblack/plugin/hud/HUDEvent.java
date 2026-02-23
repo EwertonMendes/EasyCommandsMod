@@ -20,6 +20,23 @@ import java.util.UUID;
 
 public class HUDEvent {
 
+    private static final String ROW_BG_NORMAL = "rgba(40, 120, 180, 0.14)";
+    private static final String ROW_BG_DIM = "rgba(40, 120, 180, 0.03)";
+    private static final String ROW_BG_ACTIVE = "rgba(40, 120, 180, 0.62)";
+
+    private static final String SLOT_BG_INACTIVE = "rgba(0, 220, 255, 0.18)";
+    private static final String SLOT_BG_ACTIVE = "rgba(0, 220, 255, 1.00)";
+
+    private static final String TEXT_NORMAL = "rgba(255, 255, 255, 0.92)";
+    private static final String TEXT_DIM = "rgba(255, 255, 255, 0.40)";
+    private static final String TEXT_ACTIVE = "rgba(255, 255, 255, 1.00)";
+
+    private static final int CMD_SIZE_NORMAL = 14;
+    private static final int CMD_SIZE_ACTIVE = 18;
+
+    private static final int SLOT_SIZE_NORMAL = 14;
+    private static final int SLOT_SIZE_ACTIVE = 18;
+
     public static void onPlayerReady(PlayerReadyEvent event) {
         PlayerContext ctx = resolvePlayer(event);
         if (ctx == null) return;
@@ -117,7 +134,7 @@ public class HUDEvent {
                 .setVariable("title", Translations.msg(uuid, "easycommands.hud.title").getRawText())
                 .setVariable("noCommandMsg1", Translations.msg(uuid, "easycommands.hud.noCommandMsg1").getRawText())
                 .setVariable("noCommandMsg2", Translations.msg(uuid, "easycommands.hud.noCommandMsg2").getRawText())
-                .setVariable("playerCommands", getCommandsList(player))
+                .setVariable("playerCommands", getCommandsList(uuid))
                 .setVariable("hudStyle", hudStyle);
 
         return HudBuilder.hudForPlayer(player)
@@ -125,15 +142,45 @@ public class HUDEvent {
                 .show(store);
     }
 
-    private static List<Map<String, Object>> getCommandsList(PlayerRef player) {
-        Map<Integer, String> playerCommands = ShortcutConfig.getForPlayer(player.getUuid().toString());
+    private static List<Map<String, Object>> getCommandsList(UUID uuid) {
+        Map<Integer, String> commands = ShortcutConfig.getForPlayer(uuid.toString());
 
-        return playerCommands.entrySet().stream()
+        int highlighted = HudStore.getHighlightedSlot(uuid);
+        boolean hasHighlight = highlighted != -1 && commands.containsKey(highlighted);
+
+        return commands.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .map(entry -> {
+                    int slot = entry.getKey();
+                    boolean isActive = hasHighlight && slot == highlighted;
+                    boolean isDim = hasHighlight && slot != highlighted;
+
+                    String rowBg = isActive ? ROW_BG_ACTIVE : (isDim ? ROW_BG_DIM : ROW_BG_NORMAL);
+
+                    String slotBg = isActive ? SLOT_BG_ACTIVE : SLOT_BG_INACTIVE;
+
+                    String cmdTextColor = isActive ? TEXT_ACTIVE : (isDim ? TEXT_DIM : TEXT_NORMAL);
+                    String slotTextColor = isActive ? TEXT_ACTIVE : (isDim ? TEXT_DIM : TEXT_NORMAL);
+
+                    int cmdSize = isActive ? CMD_SIZE_ACTIVE : CMD_SIZE_NORMAL;
+                    String cmdWeight = isActive ? "bold" : "normal";
+
+                    int slotSize = isActive ? SLOT_SIZE_ACTIVE : SLOT_SIZE_NORMAL;
+
                     Map<String, Object> m = new HashMap<>();
-                    m.put("slot", entry.getKey());
+                    m.put("slot", slot);
                     m.put("command", entry.getValue());
+
+                    m.put("rowBg", rowBg);
+                    m.put("slotBg", slotBg);
+
+                    m.put("cmdFontSize", cmdSize);
+                    m.put("cmdFontWeight", cmdWeight);
+                    m.put("slotFontSize", slotSize);
+
+                    m.put("cmdTextColor", cmdTextColor);
+                    m.put("slotTextColor", slotTextColor);
+
                     return m;
                 })
                 .toList();

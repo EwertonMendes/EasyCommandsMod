@@ -13,6 +13,7 @@ public class HudStore {
     private static final Map<UUID, Boolean> visibility = new ConcurrentHashMap<>();
     private static final Map<UUID, Boolean> dirty = new ConcurrentHashMap<>();
     private static final Map<UUID, HudPositionPreset> position = new ConcurrentHashMap<>();
+    private static final Map<UUID, Integer> highlightedSlot = new ConcurrentHashMap<>();
 
     public static void setHud(UUID uuid, HyUIHud hud) {
         huds.put(uuid, hud);
@@ -55,5 +56,13 @@ public class HudStore {
 
     public static HudPositionPreset getPosition(UUID uuid) {
         return position.getOrDefault(uuid, HudPositionPreset.TOP_LEFT);
+    }
+
+    public static void setHighlightedSlot(UUID uuid, int slotOrMinusOne) {
+        highlightedSlot.put(uuid, slotOrMinusOne);
+    }
+
+    public static int getHighlightedSlot(UUID uuid) {
+        return highlightedSlot.getOrDefault(uuid, -1);
     }
 }

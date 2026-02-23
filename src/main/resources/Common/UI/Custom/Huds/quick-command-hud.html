@@ -8,18 +8,20 @@
       align-items: center;
       padding: 6 8;
       margin-bottom: 4;
-      background-color: rgba(40, 120, 180, 0.14) 2;
+      background-color: {{$rowBg}} 2;
     ">
 
       <div style="
         anchor-width: 26;
         padding: 1 5;
-        background-color: rgba(0, 220, 255, 0.70) 2;
+        background-color: {{$slotBg}} 2;
       ">
         <p style="
           text-align: center;
           font-weight: bold;
+          font-size: {{$slotFontSize}};
           text-outline-color: #000000;
+          text-color: {{$slotTextColor}};
           white-space: nowrap;
         ">{{$slot}}</p>
       </div>
@@ -28,7 +30,10 @@
         margin-left: 10;
         flex-weight: 1;
         text-outline-color: #000000;
+        text-color: {{$cmdTextColor}};
         white-space: nowrap;
+        font-size: {{$cmdFontSize}};
+        font-weight: {{$cmdFontWeight}};
       ">/{{$command}}</p>
 
     </div>
