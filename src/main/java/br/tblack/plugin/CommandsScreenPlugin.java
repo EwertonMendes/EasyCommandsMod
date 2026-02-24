@@ -33,6 +33,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
         getLogger().at(Level.INFO).log("EasyCommands has started successfully!");
 
         getCommandRegistry().registerCommand(new CommandsScreenCommand());
+
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, HUDEvent::onPlayerDisconnect);
 
@@ -48,9 +49,9 @@ public class CommandsScreenPlugin extends JavaPlugin {
     @Override
     public void shutdown() {
         getLogger().at(Level.INFO).log("Plugin stopping.");
-        if (this.inboundFilter != null) {
-            PacketAdapters.deregisterInbound(this.inboundFilter);
-            this.inboundFilter = null;
-        }
+        if (this.inboundFilter == null) return;
+
+        PacketAdapters.deregisterInbound(this.inboundFilter);
+        this.inboundFilter = null;
     }
 }

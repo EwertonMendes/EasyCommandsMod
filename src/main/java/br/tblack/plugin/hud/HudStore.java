@@ -14,6 +14,8 @@ public class HudStore {
     private static final Map<UUID, Boolean> dirty = new ConcurrentHashMap<>();
     private static final Map<UUID, HudPositionPreset> position = new ConcurrentHashMap<>();
     private static final Map<UUID, Integer> highlightedSlot = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> nextAttachAtMs = new ConcurrentHashMap<>();
+    private static final Map<UUID, Long> lastHudUpdateMs = new ConcurrentHashMap<>();
 
     public static void setHud(UUID uuid, HyUIHud hud) {
         huds.put(uuid, hud);
@@ -39,6 +41,8 @@ public class HudStore {
         dirty.remove(uuid);
         position.remove(uuid);
         highlightedSlot.remove(uuid);
+        nextAttachAtMs.remove(uuid);
+        lastHudUpdateMs.remove(uuid);
     }
 
     public static void setIsVisible(UUID uuid, boolean isVisible) {
@@ -75,5 +79,30 @@ public class HudStore {
 
     public static int getHighlightedSlot(UUID uuid) {
         return highlightedSlot.getOrDefault(uuid, -1);
+    }
+
+    public static void setNextAttachAtMs(UUID uuid, long atMs) {
+        nextAttachAtMs.put(uuid, atMs);
+    }
+
+    public static long getNextAttachAtMs(UUID uuid) {
+        return nextAttachAtMs.getOrDefault(uuid, 0L);
+    }
+
+    public static boolean canAttachNow(UUID uuid, long nowMs) {
+        return nowMs >= getNextAttachAtMs(uuid);
+    }
+
+    public static long getLastHudUpdateMs(UUID uuid) {
+        return lastHudUpdateMs.getOrDefault(uuid, 0L);
+    }
+
+    public static void setLastHudUpdateMs(UUID uuid, long nowMs) {
+        lastHudUpdateMs.put(uuid, nowMs);
+    }
+
+    public static boolean canUpdateNow(UUID uuid, long nowMs, long minIntervalMs) {
+        long last = getLastHudUpdateMs(uuid);
+        return nowMs - last >= minIntervalMs;
     }
 }

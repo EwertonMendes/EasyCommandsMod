@@ -51,6 +51,11 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
         UUIDComponent uuidComponent = store.getComponent(entityRef, UUIDComponent.getComponentType());
         if (player == null || uuidComponent == null) return;
 
+        PlayerRef playerRef = store.getComponent(entityRef, PlayerRef.getComponentType());
+        if (playerRef != null) {
+            HUDEvent.onPlayerTick(playerRef, store);
+        }
+
         UUID uuid = uuidComponent.getUuid();
         String uuidStr = uuid.toString();
 

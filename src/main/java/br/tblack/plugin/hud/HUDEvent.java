@@ -38,14 +38,18 @@ public class HUDEvent {
     private static final int SLOT_SIZE_NORMAL = 14;
     private static final int SLOT_SIZE_ACTIVE = 18;
 
-    private static final long HUD_REFRESH_RATE_MS = 80;
+    private static final long HUD_REFRESH_RATE_MS = 120;
+    private static final long HUD_MIN_UPDATE_INTERVAL_MS = 120;
+    private static final long HUD_INITIAL_ATTACH_DELAY_MS = 650;
+    private static final long HUD_TOGGLE_ATTACH_DELAY_MS = 150;
 
     public static void onPlayerReady(PlayerReadyEvent event) {
         PlayerContext ctx = resolvePlayerConnect(event);
         if (ctx == null) return;
 
         UUID uuid = ctx.player.getUuid();
-        var settings = PlayerConfig.getForPlayer(uuid.toString());
+        String uuidStr = uuid.toString();
+        var settings = PlayerConfig.getForPlayer(uuidStr);
 
         HudStore.clearPlayer(uuid);
         HudStore.setIsVisible(uuid, settings.showHud);
@@ -53,10 +57,10 @@ public class HUDEvent {
         HudStore.setHighlightedSlot(uuid, -1);
         HudStore.markDirty(uuid);
 
+        long now = System.currentTimeMillis();
         if (!settings.showHud) return;
 
-        ensureHudExists(ctx.player);
-        applyUpdateNowIfDirty(ctx.player);
+        HudStore.setNextAttachAtMs(uuid, now + HUD_INITIAL_ATTACH_DELAY_MS);
     }
 
     public static void onPlayerDisconnect(PlayerDisconnectEvent event) {
@@ -66,6 +70,15 @@ public class HUDEvent {
         HudStore.clearPlayer(ctx.player.getUuid());
     }
 
+    public static void onPlayerTick(PlayerRef player, Store<EntityStore> store) {
+        UUID uuid = player.getUuid();
+
+        if (!HudStore.getIsVisible(uuid)) return;
+
+        long now = System.currentTimeMillis();
+        tryAttachHudIfDue(player, now);
+    }
+
     public static void onCommandsChanged(PlayerRef player, Store<EntityStore> store) {
         UUID uuid = player.getUuid();
 
@@ -73,15 +86,16 @@ public class HUDEvent {
 
         if (!HudStore.getIsVisible(uuid)) return;
 
-        ensureHudExists(player);
-        applyUpdateNowIfDirty(player);
+        long now = System.currentTimeMillis();
+        tryAttachHudIfDue(player, now);
     }
 
     public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
         UUID uuid = player.getUuid();
+        String uuidStr = uuid.toString();
 
         HudStore.setIsVisible(uuid, visible);
-        PlayerConfig.setShowHud(uuid.toString(), visible);
+        PlayerConfig.setShowHud(uuidStr, visible);
 
         HyUIHud hud = HudStore.getHud(uuid);
 
@@ -91,27 +105,31 @@ public class HUDEvent {
             return;
         }
 
-        ensureHudExists(player);
+        long now = System.currentTimeMillis();
+        HudStore.setNextAttachAtMs(uuid, now + HUD_TOGGLE_ATTACH_DELAY_MS);
+        HudStore.markDirty(uuid);
+
+        tryAttachHudIfDue(player, now);
 
         hud = HudStore.getHud(uuid);
-        if (hud != null) hud.unhide();
+        if (hud == null) return;
 
-        HudStore.markDirty(uuid);
-        applyUpdateNowIfDirty(player);
+        hud.unhide();
     }
 
     public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
         UUID uuid = player.getUuid();
+        String uuidStr = uuid.toString();
 
         HudStore.setPosition(uuid, preset);
-        PlayerConfig.setHudPosition(uuid.toString(), preset);
+        PlayerConfig.setHudPosition(uuidStr, preset);
 
         HudStore.markDirty(uuid);
 
         if (!HudStore.getIsVisible(uuid)) return;
 
-        ensureHudExists(player);
-        applyUpdateNowIfDirty(player);
+        long now = System.currentTimeMillis();
+        tryAttachHudIfDue(player, now);
     }
 
     public static void onLanguageChanged(PlayerRef player, Store<EntityStore> store) {
@@ -121,31 +139,33 @@ public class HUDEvent {
 
         if (!HudStore.getIsVisible(uuid)) return;
 
-        ensureHudExists(player);
-        applyUpdateNowIfDirty(player);
+        long now = System.currentTimeMillis();
+        tryAttachHudIfDue(player, now);
     }
 
-    private static void ensureHudExists(PlayerRef player) {
+    private static void tryAttachHudIfDue(PlayerRef player, long now) {
         UUID uuid = player.getUuid();
 
-        HyUIHud existing = HudStore.getHud(uuid);
-        if (existing != null) return;
+        if (HudStore.getHud(uuid) != null) return;
+        if (!HudStore.canAttachNow(uuid, now)) return;
 
         HyUIHud created = buildHud(player).show();
         HudStore.setHud(uuid, created);
         HudStore.clearDirty(uuid);
+        HudStore.setLastHudUpdateMs(uuid, now);
     }
 
-    private static void applyUpdateNowIfDirty(PlayerRef player) {
-        UUID uuid = player.getUuid();
-
+    private static void onHudRefresh(UUID uuid, PlayerRef player, HyUIHud hud) {
+        if (!HudStore.getIsVisible(uuid)) return;
         if (!HudStore.isDirty(uuid)) return;
 
-        HyUIHud hud = HudStore.getHud(uuid);
-        if (hud == null) return;
+        long now = System.currentTimeMillis();
+        if (!HudStore.canUpdateNow(uuid, now, HUD_MIN_UPDATE_INTERVAL_MS)) return;
 
         buildHud(player).updateExisting(hud);
+
         HudStore.clearDirty(uuid);
+        HudStore.setLastHudUpdateMs(uuid, now);
     }
 
     private static HudBuilder buildHud(PlayerRef player) {
@@ -162,13 +182,7 @@ public class HUDEvent {
 
         return HudBuilder.hudForPlayer(player)
                 .withRefreshRate(HUD_REFRESH_RATE_MS)
-                .onRefresh(h -> {
-                    UUID u = player.getUuid();
-                    if (!HudStore.getIsVisible(u)) return;
-                    if (!HudStore.isDirty(u)) return;
-                    buildHud(player).updateExisting(h);
-                    HudStore.clearDirty(u);
-                })
+                .onRefresh(h -> onHudRefresh(uuid, player, h))
                 .loadHtml("Huds/quick-command-hud.html", template);
     }
 
@@ -230,3 +244,4 @@ public class HUDEvent {
 
     private record PlayerContext(PlayerRef player, Store<EntityStore> store) {}
 }
+
