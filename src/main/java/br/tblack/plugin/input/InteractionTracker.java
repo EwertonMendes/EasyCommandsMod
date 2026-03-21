@@ -46,4 +46,15 @@ public final class InteractionTracker {
     public static void startOCooldown(UUID uuid) {
         oCooldownUntil.put(uuid, System.currentTimeMillis() + USE_VALID_MS);
     }
+
+    public static void clearPlayer(UUID uuid) {
+        if (uuid == null) return;
+
+        lastUsePress.remove(uuid);
+        pendingO.remove(uuid);
+        triggeredShortcut.remove(uuid);
+        suppressShortcutUntil.remove(uuid);
+        ctrlConsumed.remove(uuid);
+        oCooldownUntil.remove(uuid);
+    }
 }

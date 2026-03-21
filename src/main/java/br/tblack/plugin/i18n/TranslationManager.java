@@ -173,4 +173,27 @@ public final class TranslationManager {
             reloadLanguage(lang);
         }
     }
+
+    public boolean isLanguageSupported(String language) {
+        if (language == null || language.isBlank()) return false;
+
+        String normalized = normalizeLanguageCode(language);
+        String path = LANG_FILE_PATH.formatted(normalized);
+
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(path)) {
+            return is != null;
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    public String resolveSupportedLanguageOrDefault(String language) {
+        String normalized = normalizeLanguageCode(language);
+        return isLanguageSupported(normalized) ? normalized : DEFAULT_LANGUAGE;
+    }
+
+    private String normalizeLanguageCode(String language) {
+        if (language == null || language.isBlank()) return DEFAULT_LANGUAGE;
+        return language.trim();
+    }
 }

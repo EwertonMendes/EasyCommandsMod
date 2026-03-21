@@ -7,6 +7,7 @@ import br.tblack.plugin.config.PlayerConfig;
 import br.tblack.plugin.config.ShortcutConfig;
 import br.tblack.plugin.enums.HudPositionPreset;
 import br.tblack.plugin.i18n.Translations;
+import br.tblack.plugin.input.InteractionTracker;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.event.events.player.PlayerDisconnectEvent;
@@ -49,7 +50,12 @@ public class HUDEvent {
 
         UUID uuid = ctx.player.getUuid();
         String uuidStr = uuid.toString();
-        var settings = PlayerConfig.getForPlayer(uuidStr);
+
+        PlayerConfig.clearCachedPlayer(uuidStr);
+        PlayerConfig.reload();
+
+        String clientLanguage = ctx.player.getLanguage();
+        var settings = PlayerConfig.initializeOrRepairForPlayer(uuidStr, clientLanguage);
 
         HudStore.clearPlayer(uuid);
         HudStore.setIsVisible(uuid, settings.showHud);
@@ -67,7 +73,12 @@ public class HUDEvent {
         PlayerContext ctx = resolvePlayerDisconnect(event);
         if (ctx == null) return;
 
-        HudStore.clearPlayer(ctx.player.getUuid());
+        UUID uuid = ctx.player.getUuid();
+        String uuidStr = uuid.toString();
+
+        HudStore.clearPlayer(uuid);
+        InteractionTracker.clearPlayer(uuid);
+        PlayerConfig.clearCachedPlayer(uuidStr);
     }
 
     public static void onPlayerTick(PlayerRef player, Store<EntityStore> store) {

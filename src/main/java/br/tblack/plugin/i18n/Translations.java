@@ -75,4 +75,12 @@ public final class Translations {
     public static void reloadAllLoaded() {
         TranslationManager.getInstance().reloadAllLoaded();
     }
+
+    public static boolean isLanguageSupported(String language) {
+        return TranslationManager.getInstance().isLanguageSupported(language);
+    }
+
+    public static String resolveSupportedLanguageOrDefault(String language) {
+        return TranslationManager.getInstance().resolveSupportedLanguageOrDefault(language);
+    }
 }
