@@ -70,20 +70,18 @@ public class HUDEvent {
     }
 
     public static void onPlayerDisconnect(PlayerDisconnectEvent event) {
-        PlayerContext ctx = resolvePlayerDisconnect(event);
-        if (ctx == null) return;
-
-        UUID uuid = ctx.player.getUuid();
-        String uuidStr = uuid.toString();
+        UUID uuid = resolveDisconnectUuid(event);
+        if (uuid == null) return;
 
         HudStore.clearPlayer(uuid);
         InteractionTracker.clearPlayer(uuid);
-        PlayerConfig.clearCachedPlayer(uuidStr);
+        PlayerConfig.clearCachedPlayer(uuid.toString());
     }
 
     public static void onPlayerTick(PlayerRef player, Store<EntityStore> store) {
-        UUID uuid = player.getUuid();
+        if (player == null) return;
 
+        UUID uuid = player.getUuid();
         if (!HudStore.getIsVisible(uuid)) return;
 
         long now = System.currentTimeMillis();
@@ -91,6 +89,8 @@ public class HUDEvent {
     }
 
     public static void onCommandsChanged(PlayerRef player, Store<EntityStore> store) {
+        if (player == null) return;
+
         UUID uuid = player.getUuid();
 
         HudStore.markDirty(uuid);
@@ -102,6 +102,8 @@ public class HUDEvent {
     }
 
     public static void setHudVisible(PlayerRef player, Store<EntityStore> store, boolean visible) {
+        if (player == null) return;
+
         UUID uuid = player.getUuid();
         String uuidStr = uuid.toString();
 
@@ -111,7 +113,7 @@ public class HUDEvent {
         HyUIHud hud = HudStore.getHud(uuid);
 
         if (!visible) {
-            if (hud != null) hud.hide();
+            safeHideHud(hud);
             HudStore.markDirty(uuid);
             return;
         }
@@ -123,12 +125,12 @@ public class HUDEvent {
         tryAttachHudIfDue(player, now);
 
         hud = HudStore.getHud(uuid);
-        if (hud == null) return;
-
-        hud.unhide();
+        safeUnhideHud(hud);
     }
 
     public static void setHudPosition(PlayerRef player, Store<EntityStore> store, HudPositionPreset preset) {
+        if (player == null) return;
+
         UUID uuid = player.getUuid();
         String uuidStr = uuid.toString();
 
@@ -144,6 +146,8 @@ public class HUDEvent {
     }
 
     public static void onLanguageChanged(PlayerRef player, Store<EntityStore> store) {
+        if (player == null) return;
+
         UUID uuid = player.getUuid();
 
         HudStore.markDirty(uuid);
@@ -160,23 +164,34 @@ public class HUDEvent {
         if (HudStore.getHud(uuid) != null) return;
         if (!HudStore.canAttachNow(uuid, now)) return;
 
-        HyUIHud created = buildHud(player).show();
-        HudStore.setHud(uuid, created);
-        HudStore.clearDirty(uuid);
-        HudStore.setLastHudUpdateMs(uuid, now);
+        try {
+            HyUIHud created = buildHud(player).show();
+            if (created == null) return;
+
+            HudStore.setHud(uuid, created);
+            HudStore.clearDirty(uuid);
+            HudStore.setLastHudUpdateMs(uuid, now);
+        } catch (Exception ignored) {
+            HudStore.setNextAttachAtMs(uuid, now + HUD_INITIAL_ATTACH_DELAY_MS);
+        }
     }
 
     private static void onHudRefresh(UUID uuid, PlayerRef player, HyUIHud hud) {
+        if (uuid == null || player == null || hud == null) return;
         if (!HudStore.getIsVisible(uuid)) return;
         if (!HudStore.isDirty(uuid)) return;
 
         long now = System.currentTimeMillis();
         if (!HudStore.canUpdateNow(uuid, now, HUD_MIN_UPDATE_INTERVAL_MS)) return;
 
-        buildHud(player).updateExisting(hud);
-
-        HudStore.clearDirty(uuid);
-        HudStore.setLastHudUpdateMs(uuid, now);
+        try {
+            buildHud(player).updateExisting(hud);
+            HudStore.clearDirty(uuid);
+        } catch (Exception ignored) {
+            HudStore.markDirty(uuid);
+        } finally {
+            HudStore.setLastHudUpdateMs(uuid, now);
+        }
     }
 
     private static HudBuilder buildHud(PlayerRef player) {
@@ -238,21 +253,49 @@ public class HUDEvent {
     }
 
     private static PlayerContext resolvePlayerConnect(PlayerReadyEvent event) {
-        Ref<EntityStore> ref = event.getPlayerRef();
-        Store<EntityStore> store = ref.getStore();
-        PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
-        if (player == null) return null;
-        return new PlayerContext(player, store);
+        if (event == null || event.getPlayerRef() == null) return null;
+
+        try {
+            Ref<EntityStore> ref = event.getPlayerRef();
+            Store<EntityStore> store = ref.getStore();
+            if (store == null) return null;
+
+            PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
+            if (player == null) return null;
+
+            return new PlayerContext(player, store);
+        } catch (Exception ignored) {
+            return null;
+        }
     }
 
-    private static PlayerContext resolvePlayerDisconnect(PlayerDisconnectEvent event) {
-        Ref<EntityStore> ref = event.getPlayerRef().getReference();
-        Store<EntityStore> store = ref.getStore();
-        PlayerRef player = store.getComponent(ref, PlayerRef.getComponentType());
-        if (player == null) return null;
-        return new PlayerContext(player, store);
+    private static UUID resolveDisconnectUuid(PlayerDisconnectEvent event) {
+        if (event == null || event.getPlayerRef() == null) return null;
+
+        try {
+            return event.getPlayerRef().getUuid();
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static void safeHideHud(HyUIHud hud) {
+        if (hud == null) return;
+
+        try {
+            hud.hide();
+        } catch (Exception ignored) {
+        }
+    }
+
+    private static void safeUnhideHud(HyUIHud hud) {
+        if (hud == null) return;
+
+        try {
+            hud.unhide();
+        } catch (Exception ignored) {
+        }
     }
 
     private record PlayerContext(PlayerRef player, Store<EntityStore> store) {}
 }
-

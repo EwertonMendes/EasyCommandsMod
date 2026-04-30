@@ -42,17 +42,26 @@ public class EasyCommandsUtils {
     public static void runOnWorldThread(PlayerRef playerApiRef, Consumer<Player> action) {
         if (playerApiRef == null || action == null) return;
 
-        var playerEntityReference = playerApiRef.getReference();
-        if (playerEntityReference == null || !playerEntityReference.isValid()) return;
+        try {
+            var playerEntityReference = playerApiRef.getReference();
+            if (playerEntityReference == null || !playerEntityReference.isValid()) return;
 
-        var entityStore = playerEntityReference.getStore();
-        var world = entityStore.getExternalData().getWorld();
+            var entityStore = playerEntityReference.getStore();
 
-        world.execute(() -> {
-            Player playerEntity = entityStore.getComponent(playerEntityReference, Player.getComponentType());
-            if (playerEntity == null) return;
+            var world = entityStore.getExternalData().getWorld();
 
-            action.accept(playerEntity);
-        });
+            world.execute(() -> {
+                try {
+                    if (!playerEntityReference.isValid()) return;
+
+                    Player playerEntity = entityStore.getComponent(playerEntityReference, Player.getComponentType());
+                    if (playerEntity == null) return;
+
+                    action.accept(playerEntity);
+                } catch (Exception ignored) {
+                }
+            });
+        } catch (Exception ignored) {
+        }
     }
 }
