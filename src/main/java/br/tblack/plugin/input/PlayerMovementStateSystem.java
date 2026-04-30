@@ -16,7 +16,6 @@ import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.movement.MovementStatesComponent;
-import com.hypixel.hytale.server.core.inventory.Inventory;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
@@ -59,7 +58,7 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
         UUID uuid = uuidComponent.getUuid();
         String uuidStr = uuid.toString();
 
-        int highlightedSlot = resolveHighlightedSlot(player, uuidStr);
+        int highlightedSlot = resolveHighlightedSlot(uuidStr);
         updateHighlightedSlotIfChanged(uuid, highlightedSlot, entityRef, store);
 
         PlayerConfig.ActivationMode mode = PlayerConfig.getActivationMode(uuidStr);
@@ -141,9 +140,7 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
                          CommandBuffer<EntityStore> commandBuffer,
                          UUID uuid) {
 
-        Inventory inv = player.getInventory();
-        byte activeSlot = inv.getActiveHotbarSlot();
-        int slotNumber = activeSlot + 1;
+        int slotNumber = HotbarSlotTracker.getOneBased(uuid);
 
         String cmd = ShortcutConfig.getCommand(uuid.toString(), slotNumber);
 
@@ -162,8 +159,16 @@ public class PlayerMovementStateSystem extends EntityTickingSystem<EntityStore> 
         }
     }
 
-    private static int resolveHighlightedSlot(Player player, String uuidStr) {
-        int activeSlot = player.getInventory().getActiveHotbarSlot() + 1;
+    private static int resolveHighlightedSlot(String uuidStr) {
+        UUID uuid;
+
+        try {
+            uuid = UUID.fromString(uuidStr);
+        } catch (Exception ignored) {
+            return -1;
+        }
+
+        int activeSlot = HotbarSlotTracker.getOneBased(uuid);
 
         String activeCommand = ShortcutConfig.getCommand(uuidStr, activeSlot);
         if (activeCommand == null || activeCommand.isEmpty()) return -1;

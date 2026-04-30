@@ -4,6 +4,7 @@ import br.tblack.plugin.command.CommandsScreenCommand;
 import br.tblack.plugin.config.PlayerConfig;
 import br.tblack.plugin.config.ShortcutConfig;
 import br.tblack.plugin.hud.HUDEvent;
+import br.tblack.plugin.input.HotbarSlotTracker;
 import br.tblack.plugin.input.PacketListener;
 import br.tblack.plugin.input.PlayerMovementStateSystem;
 import com.hypixel.hytale.logger.HytaleLogger;
@@ -37,6 +38,7 @@ public class CommandsScreenPlugin extends JavaPlugin {
         this.getEventRegistry().registerGlobal(PlayerReadyEvent.class, HUDEvent::onPlayerReady);
         this.getEventRegistry().registerGlobal(PlayerDisconnectEvent.class, HUDEvent::onPlayerDisconnect);
 
+        HotbarSlotTracker.register();
         ShortcutConfig.load();
         PlayerConfig.load();
 
